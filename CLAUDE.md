@@ -2,6 +2,9 @@
 
 Context: offline field-manual set for **Boog Visuals** projection-mapping gigs (Magnetic Fields stage and any future shows). Read at the venue on a laptop or phone with no internet. Print-ready in a pinch.
 
+## The rig in one paragraph
+Resolume Arena runs on the **Windows machine** — that's the only Resolume-licensed computer, and it's the show brain (projector out, DMX, MIDI in). The **Mac** is the secondary box: planning, content rendering, sometimes a TouchDesigner generative source feeding Resolume back over NDI. Anything cross-platform we build (e.g. controller-as-MIDI bridges) needs to assume Resolume only exists on the Windows side; the Mac is a feeder/planner, never the show machine.
+
 ## Hard rules for this folder
 
 ### Offline-safe or it doesn't ship
