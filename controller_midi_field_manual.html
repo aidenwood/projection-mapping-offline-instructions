@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controllers as Wireless MIDI — Field Manual</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--serif); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { display: flex; min-height: 100vh; }
+  nav.toc { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { flex: 1; max-width: 820px; padding: 48px 56px 120px; }
+  @media (max-width: 900px) { .wrap { flex-direction: column; } nav.toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); } main { padding: 32px 22px 80px; } }
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 40px; }
+  .masthead .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .masthead h1 { font-family: var(--mono); font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .masthead .lede { color: var(--muted); font-style: italic; max-width: 60ch; margin: 0; }
+  .toc-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocstep; }
+  .toc li { margin-bottom: 6px; counter-increment: tocstep; }
+  .toc a { color: var(--text); text-decoration: none; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; display: block; padding: 6px 0 6px 32px; position: relative; border-left: 1px solid transparent; transition: all 0.15s ease; }
+  .toc a::before { content: counter(tocstep, decimal-leading-zero); position: absolute; left: 0; color: var(--muted); font-size: 10px; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); padding-left: 36px; }
+  .toc-back { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+  .toc-back:hover { color: var(--accent); }
+  .search-box { width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; margin-bottom: 22px; border-radius: 2px; }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-hit { background: rgba(255, 181, 71, 0.25); padding: 1px 2px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  section .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px; }
+  section h2 { font-family: var(--mono); font-weight: 600; font-size: 22px; margin: 0 0 8px; line-height: 1.2; }
+  section .section-sub { color: var(--muted); font-style: italic; margin: 0 0 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); }
+  h3 { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 32px 0 12px; }
+  h4 { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+  p { margin: 0 0 14px; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); padding: 1px 6px; border-radius: 2px; color: var(--accent); }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: stepc; }
+  ol.steps > li { counter-increment: stepc; padding: 18px 0 18px 56px; border-bottom: 1px solid var(--border); position: relative; }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before { content: counter(stepc, decimal-leading-zero); position: absolute; left: 0; top: 18px; font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; background: var(--surface-2); padding: 4px 8px; border: 1px solid var(--border); }
+  ol.steps > li p:last-child { margin-bottom: 0; }
+  .callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 14px 18px; margin: 18px 0; font-size: 14.5px; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.info { border-left-color: var(--info); }
+  .callout .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 6px; }
+  .callout.warn .label { color: var(--warn); }
+  .callout.ok .label { color: var(--ok); }
+  .callout.info .label { color: var(--info); }
+  .callout p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: var(--mono); font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; background: var(--surface); }
+  tr:hover td { background: var(--surface); }
+  .diagram { background: var(--surface); border: 1px solid var(--border); padding: 24px; margin: 22px 0; overflow-x: auto; }
+  .diagram pre { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--text); margin: 0; white-space: pre; }
+  .diagram .caption { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+  .ts { background: var(--surface); border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; }
+  .ts summary { cursor: pointer; padding: 14px 18px; font-family: var(--mono); font-size: 13px; list-style: none; color: var(--warn); font-weight: 600; user-select: none; position: relative; padding-right: 40px; }
+  .ts summary::-webkit-details-marker { display: none; }
+  .ts summary::after { content: "+"; position: absolute; right: 18px; top: 12px; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+  .ts[open] summary::after { content: "−"; }
+  .ts .body { padding: 4px 18px 18px; border-top: 1px solid var(--border); }
+  .ts .body p:first-child { margin-top: 12px; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--surface); display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.15s; font-size: 14.5px; }
+  .checklist li:hover { border-color: var(--accent-dim); }
+  .checklist li.done { opacity: 0.45; text-decoration: line-through; }
+  .checklist .box { width: 14px; height: 14px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 4px; position: relative; }
+  .checklist li.done .box { background: var(--ok); border-color: var(--ok); }
+  .checklist li.done .box::after { content: "✓"; position: absolute; color: var(--bg); font-size: 12px; top: -3px; left: 1px; font-weight: bold; }
+  dl.glossary { margin: 0; }
+  dl.glossary dt { font-family: var(--mono); color: var(--accent); font-size: 13px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  dl.glossary dd { margin: 4px 0 0; padding-left: 0; }
+  footer { border-top: 1px solid var(--border); margin-top: 80px; padding-top: 22px; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; }
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <a class="toc-back" href="manuals_index.html">&larr; Manual index</a>
+  <div class="toc-title">Field Manual</div>
+  <input type="text" id="search" class="search-box" placeholder="Search the manual..." />
+  <ol class="toc">
+    <li><a href="#why">Why a gamepad</a></li>
+    <li><a href="#chain">The signal chain</a></li>
+    <li><a href="#gear">Gear &amp; pre-cache</a></li>
+    <li><a href="#pair-xbox">Pair Xbox controller</a></li>
+    <li><a href="#pair-ps5">Pair DualSense (PS5)</a></li>
+    <li><a href="#bridge">Bridge: gamepad → MIDI</a></li>
+    <li><a href="#loopmidi">loopMIDI virtual cable</a></li>
+    <li><a href="#mapping">Map in Resolume</a></li>
+    <li><a href="#templates">Suggested mappings</a></li>
+    <li><a href="#latency">Latency &amp; battery reality</a></li>
+    <li><a href="#mac">Doing it on a Mac</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Show-day checklist</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual · Volume V</div>
+  <h1>Xbox &amp; PS5 Controllers as Wireless MIDI for Resolume</h1>
+  <p class="lede">How to take a console gamepad, pair it over Bluetooth to the show laptop, translate every stick, trigger, and button into MIDI, and map the lot into Resolume Arena. With the honest caveats about latency, battery, and what the platform won't let you do.</p>
+</header>
+
+<section id="why">
+  <span class="num">Section 01</span>
+  <h2>Why a gamepad</h2>
+  <p class="section-sub">When a $99 controller beats a $500 MIDI surface.</p>
+
+  <p>An Xbox or PS5 controller gives you two analogue sticks (four axes), two analogue triggers, a D-pad, a dozen buttons, and on the DualSense a touchpad with two axes and a click. That's <strong>more continuous controls than a Korg nanoKONTROL2</strong>, in a wireless package designed to take a beating, with batteries that last a full gig, for the price of a takeaway dinner.</p>
+
+  <p>For projection work specifically, the right hand stick is brilliant for XY-pad effects (blur position, distort centre, light position), the triggers give you smooth attack/decay-style ramps, the bumpers are perfect for "hold to engage" effects, and the face buttons launch clips. You can run the rig with one hand on the mouse and one hand walking around the front-of-house with a gamepad in your back pocket. That's the dream.</p>
+
+  <div class="callout">
+    <span class="label">The catch</span>
+    <p>Neither controller is a MIDI device. Windows sees them as <em>HID gamepads</em>. You need a bridge program that reads the gamepad and writes MIDI into a virtual cable that Resolume listens on. The bridge is the whole game — pick a good one and the rest is configuration.</p>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">Don't ditch the real MIDI controller</span>
+    <p>A gamepad is a supplementary control surface, not a replacement for an Akai APC or Launchpad on the desk. Bluetooth drops happen. Batteries die. Always have a hardwired MIDI controller doing the show-critical clip launches; let the gamepad do the expressive, recoverable stuff (FX, looks, parameter sweeps).</p>
+  </div>
+</section>
+
+<section id="chain">
+  <span class="num">Section 02</span>
+  <h2>The signal chain</h2>
+  <p class="section-sub">From your thumb to a pixel on the wall.</p>
+
+  <div class="diagram">
+    <div class="caption">Gamepad → MIDI → Resolume</div>
+<pre>
+   ┌──────────────────────┐    Bluetooth LE / 2.4 GHz
+   │  Xbox / DualSense    │ ─────────────────────────────┐
+   │  controller          │                                │
+   └──────────────────────┘                                ↓
+                                              ┌──────────────────────┐
+                                              │ Windows HID stack    │
+                                              │ (DirectInput /       │
+                                              │  XInput / WGI)       │
+                                              └──────────────────────┘
+                                                          │
+                                                          ↓
+                                              ┌──────────────────────┐
+                                              │ Bridge app           │
+                                              │ (rejoy / GP MIDI /   │
+                                              │  Bome MT / custom)   │
+                                              │ reads HID, writes    │
+                                              │ MIDI CC + Notes      │
+                                              └──────────────────────┘
+                                                          │
+                                                          ↓
+                                              ┌──────────────────────┐
+                                              │ loopMIDI virtual     │
+                                              │ MIDI port            │
+                                              └──────────────────────┘
+                                                          │
+                                                          ↓
+                                              ┌──────────────────────┐
+                                              │ Resolume Arena       │
+                                              │ MIDI input → clips,  │
+                                              │ FX, dashboards       │
+                                              └──────────────────────┘
+</pre>
+  </div>
+
+  <p>Every link is a place it can fall over. Walk the chain top to bottom when something breaks. Don't start from Resolume — start from the controller.</p>
+</section>
+
+<section id="gear">
+  <span class="num">Section 03</span>
+  <h2>Gear &amp; pre-cache</h2>
+  <p class="section-sub">Carry it on the day. Download it at home.</p>
+
+  <h4>Physical kit</h4>
+  <ul>
+    <li>Xbox Wireless Controller (Series X|S or Xbox One with BT — older Xbox One pads from 2013–2015 are <em>not</em> Bluetooth, only proprietary RF; check the plastic around the Xbox button: if it's flush with the face, BT; if it's part of a raised lip with the bumpers, no BT).</li>
+    <li>PS5 DualSense controller (any revision, all are Bluetooth).</li>
+    <li>USB-C cable for each controller. <strong>Non-negotiable.</strong> This is your fallback when Bluetooth misbehaves, and your charge cable.</li>
+    <li>Bluetooth on the show laptop. Most modern Windows laptops have BT 5.x onboard. If not, a tiny USB BT 5.0 dongle for ~$15. Pre-pair at home; don't rely on driver auto-install at the venue.</li>
+    <li>Spare AA batteries if the Xbox controller is the older AA-powered model.</li>
+  </ul>
+
+  <h4>Software (install before leaving the house)</h4>
+  <ul>
+    <li><strong>loopMIDI</strong> by Tobias Erichsen. Free. The virtual MIDI cable between the bridge and Resolume. <code>tobias-erichsen.de/software/loopmidi.html</code></li>
+    <li>A gamepad-to-MIDI bridge. Pick one (see <a href="#bridge">Section 06</a>):
+      <ul>
+        <li><strong>rejoy</strong> — free, simple, Windows. Direct gamepad-to-MIDI.</li>
+        <li><strong>GamePad MIDI</strong> (a.k.a. "Joystick MIDI") variants on GitHub — free, configurable.</li>
+        <li><strong>Bome MIDI Translator Pro</strong> — paid (~$70), industry standard, handles HID and MIDI translation with arbitrary logic. The right choice if you're going to do this on every gig.</li>
+        <li><strong>JoyToKey + a MIDI keyboard emulator</strong> — janky, only use as a last resort.</li>
+      </ul>
+    </li>
+    <li><strong>DS4Windows</strong> (optional, for DualSense) — only needed if a game / app insists on seeing the controller as an Xbox 360 pad. The bridge apps below read DualSense natively so you usually don't need it.</li>
+    <li>Latest controller firmware. Update via Xbox Accessories app (Xbox) or by plugging the DualSense into a PS5 and accepting the system prompt before the gig.</li>
+  </ul>
+
+  <div class="callout info">
+    <span class="label">Pre-cache before the gig</span>
+    <p>Installers, MSI/EXE files, licence keys (Bome), and a saved bridge preset all go on the show USB stick. The venue Wi-Fi will not save you if you forgot one.</p>
+  </div>
+</section>
+
+<section id="pair-xbox">
+  <span class="num">Section 04</span>
+  <h2>Pair an Xbox controller over Bluetooth (Windows)</h2>
+  <p class="section-sub">Two minutes if everything cooperates. Twenty if it doesn't.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Confirm the controller has Bluetooth.</strong> Look at the front face. If the plastic around the Xbox logo button is one flat surface continuous with the bumpers, it's BT-capable. If the Xbox button sits in a raised cluster with the bumpers (original 2013 model), it isn't — that pad needs a proprietary Xbox Wireless Adapter (also a fine option, see callout).</p>
+    </li>
+    <li>
+      <p><strong>Charge or fresh-battery the pad.</strong> Pairing on a low battery has caused at least one cancelled load-in. Plug it into USB for 30 minutes first, or pop in fresh AAs.</p>
+    </li>
+    <li>
+      <p><strong>Disconnect from anything else.</strong> If the pad was last paired to an Xbox console or a phone, hold the Xbox button until it powers off, then power back on. A controller will silently re-bond to its last host if it sees it on air.</p>
+    </li>
+    <li>
+      <p><strong>Open Windows Bluetooth settings.</strong> <code>Settings → Bluetooth &amp; devices → Add device → Bluetooth</code>. Confirm Bluetooth is on, in pairing mode for the laptop.</p>
+    </li>
+    <li>
+      <p><strong>Put the controller in pairing mode.</strong> Power it on with the Xbox button (LED solid). Then press and hold the small <strong>Pair</strong> button on the top edge (next to the USB-C port) for ~3 seconds until the Xbox button starts flashing rapidly.</p>
+    </li>
+    <li>
+      <p><strong>Pick it from the Windows list.</strong> It shows up as <em>Xbox Wireless Controller</em>. Click to pair. The Xbox button goes solid once paired.</p>
+    </li>
+    <li>
+      <p><strong>Verify in Game Controllers.</strong> Run <code>joy.cpl</code> from Start. The controller appears as <em>Xbox Wireless Controller</em>. Open Properties and twiddle sticks/triggers — the axes should move. If they do, the OS-level connection is solid.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Xbox Wireless Adapter (better than BT for shows)</span>
+    <p>The little USB dongle Microsoft sells (or a clone) gives you Xbox-proprietary wireless rather than Bluetooth. <strong>Lower latency, longer range, more reliable, and supports up to 8 pads at once.</strong> If you're using gamepads as primary control on a real gig, buy the adapter and ignore Bluetooth. It costs about $30 and pays for itself the first time BT goes weird.</p>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">Windows likes to "help"</span>
+    <p>Windows Update may quietly install a driver update for the controller mid-show. Before the gig: <code>Settings → Windows Update → Advanced options → Pause updates</code> for as long as Windows lets you. The full update-disable steps live in <a href="projection_setup_field_manual.html#offline">Volume I, Operating fully offline</a>.</p>
+  </div>
+</section>
+
+<section id="pair-ps5">
+  <span class="num">Section 05</span>
+  <h2>Pair a DualSense (PS5) over Bluetooth (Windows)</h2>
+  <p class="section-sub">Sony's "press both" pairing combo.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Charge it first.</strong> Same rule as the Xbox pad — a low-battery DualSense will drop pairing partway and you'll spend 10 minutes wondering why.</p>
+    </li>
+    <li>
+      <p><strong>If the pad was last on a PS5, power-cycle it.</strong> Hold the PS button for ~10 seconds until the lightbar goes dark. This drops the bond to the console.</p>
+    </li>
+    <li>
+      <p><strong>Open Windows Bluetooth settings.</strong> <code>Settings → Bluetooth &amp; devices → Add device → Bluetooth</code>.</p>
+    </li>
+    <li>
+      <p><strong>Put the DualSense in pairing mode.</strong> Hold the <strong>PS button</strong> and the <strong>Create button</strong> (small button left of the touchpad, looks like a share/arrow icon) <em>at the same time</em> for ~3 seconds until the lightbar flashes rapidly in blue.</p>
+    </li>
+    <li>
+      <p><strong>Pair from the Windows list.</strong> It shows up as <em>Wireless Controller</em> (yes, that generic — Sony doesn't brand it over BT). Click to pair. The lightbar goes solid (varies; sometimes pulses) once connected.</p>
+    </li>
+    <li>
+      <p><strong>Verify in Game Controllers.</strong> <code>joy.cpl</code> → it appears as <em>Wireless Controller</em>. Open Properties and check axes and buttons. The touchpad and the gyro will <em>not</em> appear here — they need a bridge that supports DualSense specifically.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">DualSense over Bluetooth — what you lose</span>
+    <p>Bluetooth gives you sticks, triggers, D-pad, face buttons, bumpers, touchpad press, and the basic gyro. You <strong>do not</strong> get adaptive triggers (the resistive feedback feature), proper haptic rumble, microphone, or speaker. None of that matters for visuals — but know it. If you ever need those features wired, plug in USB-C and the same bridge will usually pick them up automatically.</p>
+  </div>
+
+  <div class="callout info">
+    <span class="label">DualSense Edge</span>
+    <p>If you've got the Edge model, the back paddles and profile-switch button show up as extra buttons in the bridge software. More inputs is more mappings.</p>
+  </div>
+</section>
+
+<section id="bridge">
+  <span class="num">Section 06</span>
+  <h2>Bridge: gamepad input to MIDI output</h2>
+  <p class="section-sub">Pick one. Configure once. Save the preset.</p>
+
+  <p>Resolume doesn't read HID gamepads — it reads MIDI. The bridge is the program that watches the gamepad and emits MIDI Notes (for buttons) and MIDI CCs (for axes and triggers). All three options below produce the same result; the choice is about polish, price, and how much logic you need.</p>
+
+  <h3>Option A — rejoy (free, the easy choice)</h3>
+  <p><strong>rejoy</strong> is a small free Windows app that reads any XInput / DirectInput controller and emits MIDI to a chosen output. Map sticks to CC, buttons to Notes, save a preset, done. Good first port of call. Find it via the developer's site or a reputable software mirror — download at home, copy to the show USB.</p>
+
+  <ol class="steps">
+    <li><p>Launch rejoy with the controller already paired and showing up in <code>joy.cpl</code>.</p></li>
+    <li><p>Pick the controller from the input dropdown. The buttons and axes preview should react when you wiggle the pad.</p></li>
+    <li><p>Pick <strong>loopMIDI Port</strong> as the MIDI output (you set this up in <a href="#loopmidi">Section 07</a>).</p></li>
+    <li><p>For each axis, pick a MIDI CC number (1–127). Set the channel — keep all CCs on channel 1 unless you're juggling multiple devices.</p></li>
+    <li><p>For each button, pick a MIDI Note. Buttons send Note On when pressed, Note Off when released.</p></li>
+    <li><p>Save the preset to the show USB. Name it <code>boog-xbox-v1.json</code> or similar. Future-you will thank present-you.</p></li>
+  </ol>
+
+  <h3>Option B — Bome MIDI Translator Pro (paid, bombproof)</h3>
+  <p><strong>Bome MIDI Translator Pro</strong> is the gold standard for HID-to-MIDI translation in live environments. About $70. Worth every cent if gamepads are a permanent part of your rig. It reads the gamepad directly via its built-in HID input, runs arbitrary translation rules, and emits MIDI on any port.</p>
+
+  <ol class="steps">
+    <li><p>Open Bome MT Pro. Create a new project.</p></li>
+    <li><p><code>Preferences → MIDI Ports</code> — enable the <strong>loopMIDI Port</strong> as an output.</p></li>
+    <li><p><code>Preferences → HID</code> (or "Game Controllers" depending on version) — enable the paired controller. Test that the live monitor sees button presses.</p></li>
+    <li><p>For each control, add a translator: input = HID event from the gamepad, output = MIDI message to loopMIDI. Use Bome's rules language to scale axis range (0–65535) down to MIDI's 0–127.</p></li>
+    <li><p>For analogue triggers (which idle at 0 and only go up), you can split them into a CC, or remap one trigger to act as a "shift" button and double the rest of the controls into two banks.</p></li>
+    <li><p>Save the .bmtp project to USB. Set Bome to launch on Windows startup if you want it always there.</p></li>
+  </ol>
+
+  <h3>Option C — GitHub gamepad-to-MIDI utilities (free, technical)</h3>
+  <p>Several small open-source bridges exist on GitHub (search <code>gamepad-to-midi</code> or <code>joystick midi</code>). They tend to be Python or .NET. Quality is uneven — some work great, some haven't been touched in years. Test thoroughly at home before relying on one. Self-built scripts using <code>pygame</code> + <code>mido</code> are also viable if you're comfortable.</p>
+
+  <div class="callout warn">
+    <span class="label">Whatever you pick — save the preset to USB</span>
+    <p>If the laptop dies and you swap to a backup, the preset file is the difference between a 5-minute recovery and a re-write from memory at 11pm.</p>
+  </div>
+</section>
+
+<section id="loopmidi">
+  <span class="num">Section 07</span>
+  <h2>loopMIDI — the virtual cable</h2>
+  <p class="section-sub">An app-to-app MIDI jumper that doesn't exist physically.</p>
+
+  <p>Windows has no built-in virtual MIDI cable, which is wild but here we are. <strong>loopMIDI</strong> by Tobias Erichsen creates virtual MIDI ports that any app can send into or receive from. Free, tiny, has not changed meaningfully in a decade, which means it just works.</p>
+
+  <ol class="steps">
+    <li><p>Install loopMIDI (offline installer, on the USB stick).</p></li>
+    <li><p>Launch it. In the bottom-left, type a port name. <code>boog-controller</code> is a good name — easy to find in dropdowns. Click the <strong>+</strong> button.</p></li>
+    <li><p>The port now exists. Both your bridge app and Resolume will see <em>boog-controller</em> in their MIDI device lists.</p></li>
+    <li><p>Set loopMIDI to launch on Windows startup (right-click the tray icon → Autostart). Otherwise it won't be running after a reboot and nothing will pass MIDI.</p></li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Why not just plug into Resolume's "OS MIDI" input?</span>
+    <p>Resolume reads any system MIDI device. Your bridge app needs to send MIDI <em>somewhere</em>. loopMIDI is the pipe that connects the two app-side MIDI endpoints. Without it, the bridge has no MIDI output to choose.</p>
+  </div>
+</section>
+
+<section id="mapping">
+  <span class="num">Section 08</span>
+  <h2>Map the controls in Resolume</h2>
+  <p class="section-sub">MIDI Learn, then save and don't touch it.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Enable the MIDI device in Resolume.</strong> <code>Preferences → MIDI</code>. Tick the <strong>boog-controller</strong> port (or whatever you named the loopMIDI port) under Inputs. If it's not in the list, loopMIDI isn't running or the bridge isn't pointing at it.</p>
+    </li>
+    <li>
+      <p><strong>Open MIDI Learn mode.</strong> Top right of Resolume's main window, click <strong>MIDI</strong>. The interface goes blue-purple and everything mappable lights up.</p>
+    </li>
+    <li>
+      <p><strong>Click a clip slot, push a button on the gamepad.</strong> Resolume captures the incoming MIDI Note and binds it. Repeat for every clip you want to trigger.</p>
+    </li>
+    <li>
+      <p><strong>Click an effect parameter, move a stick.</strong> Resolume captures the CC and binds it. The stick now sweeps that parameter. Right-click the binding to set the range (e.g. 0–50% instead of 0–100%) and the response curve.</p>
+    </li>
+    <li>
+      <p><strong>Set "trigger style" sensibly.</strong> In MIDI Learn mode you can right-click a clip binding and pick:
+        <ul>
+          <li><strong>Trigger</strong> — fires on press, ignores release.</li>
+          <li><strong>Gate</strong> — clip plays while button held, stops on release. Brilliant for bumpers.</li>
+          <li><strong>Toggle</strong> — press to start, press again to stop.</li>
+        </ul>
+      </p>
+    </li>
+    <li>
+      <p><strong>Exit MIDI Learn and save the composition.</strong> The mappings save with the .avc file. Back the file up to USB.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <span class="label">Map shortcut presets</span>
+    <p>Resolume's <code>Shortcuts</code> panel (the one with all the bindings listed) lets you export the whole binding set as a <code>.xml</code> shortcuts preset. Save it next to the composition. Loading the same preset on a backup laptop saves you twenty minutes.</p>
+  </div>
+</section>
+
+<section id="templates">
+  <span class="num">Section 09</span>
+  <h2>Suggested mappings</h2>
+  <p class="section-sub">A starting point. Adjust to taste.</p>
+
+  <h3>Xbox controller — Boog default</h3>
+  <table>
+    <thead>
+      <tr><th>Control</th><th>Type</th><th>MIDI</th><th>Resolume target</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Left stick X</td><td>CC 1</td><td>Ch1</td><td>Master FX position X</td></tr>
+      <tr><td>Left stick Y</td><td>CC 2</td><td>Ch1</td><td>Master FX position Y</td></tr>
+      <tr><td>Right stick X</td><td>CC 3</td><td>Ch1</td><td>Layer 2 distort X</td></tr>
+      <tr><td>Right stick Y</td><td>CC 4</td><td>Ch1</td><td>Layer 2 distort Y</td></tr>
+      <tr><td>Left trigger (LT)</td><td>CC 5</td><td>Ch1</td><td>Master speed</td></tr>
+      <tr><td>Right trigger (RT)</td><td>CC 6</td><td>Ch1</td><td>Master strobe rate</td></tr>
+      <tr><td>Left bumper (LB)</td><td>Note 60</td><td>Gate</td><td>Hold = invert colours</td></tr>
+      <tr><td>Right bumper (RB)</td><td>Note 61</td><td>Gate</td><td>Hold = scale x2</td></tr>
+      <tr><td>A</td><td>Note 62</td><td>Trigger</td><td>Clip column 1</td></tr>
+      <tr><td>B</td><td>Note 63</td><td>Trigger</td><td>Clip column 2</td></tr>
+      <tr><td>X</td><td>Note 64</td><td>Trigger</td><td>Clip column 3</td></tr>
+      <tr><td>Y</td><td>Note 65</td><td>Trigger</td><td>Clip column 4</td></tr>
+      <tr><td>D-pad ↑/↓/←/→</td><td>Notes 66–69</td><td>Trigger</td><td>Composition deck swap</td></tr>
+      <tr><td>View (Back)</td><td>Note 70</td><td>Toggle</td><td>Blackout</td></tr>
+      <tr><td>Menu (Start)</td><td>Note 71</td><td>Trigger</td><td>Tap tempo</td></tr>
+      <tr><td>Left stick click</td><td>Note 72</td><td>Trigger</td><td>Reset master FX</td></tr>
+      <tr><td>Right stick click</td><td>Note 73</td><td>Trigger</td><td>Reset distort</td></tr>
+    </tbody>
+  </table>
+
+  <h3>DualSense — Boog default</h3>
+  <table>
+    <thead>
+      <tr><th>Control</th><th>Type</th><th>MIDI</th><th>Resolume target</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Left stick X / Y</td><td>CC 1 / 2</td><td>Ch1</td><td>Master FX XY</td></tr>
+      <tr><td>Right stick X / Y</td><td>CC 3 / 4</td><td>Ch1</td><td>Distort XY</td></tr>
+      <tr><td>L2 trigger</td><td>CC 5</td><td>Ch1</td><td>Master speed</td></tr>
+      <tr><td>R2 trigger</td><td>CC 6</td><td>Ch1</td><td>Strobe rate</td></tr>
+      <tr><td>L1 / R1</td><td>Notes 60 / 61</td><td>Gate</td><td>Invert / scale x2</td></tr>
+      <tr><td>Cross / Circle / Square / Triangle</td><td>Notes 62–65</td><td>Trigger</td><td>Clip columns 1–4</td></tr>
+      <tr><td>D-pad</td><td>Notes 66–69</td><td>Trigger</td><td>Deck swap</td></tr>
+      <tr><td>Create</td><td>Note 70</td><td>Toggle</td><td>Blackout</td></tr>
+      <tr><td>Options</td><td>Note 71</td><td>Trigger</td><td>Tap tempo</td></tr>
+      <tr><td>L3 / R3</td><td>Notes 72 / 73</td><td>Trigger</td><td>Reset FX / distort</td></tr>
+      <tr><td>Touchpad X / Y</td><td>CC 7 / 8</td><td>Ch1</td><td>Bonus XY pad — e.g. hue/saturation</td></tr>
+      <tr><td>Touchpad click</td><td>Note 74</td><td>Toggle</td><td>Mute layer 3</td></tr>
+      <tr><td>PS button</td><td>—</td><td>—</td><td>Leave unmapped (system reserves)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <span class="label">Pick a sensible CC numbering scheme</span>
+    <p>Don't reuse CCs across controllers if you might use both at once. CC 1–20 for primary controller, CC 21–40 for secondary, leaves CC 41+ for any hardware MIDI device. Mid-show MIDI collisions are pure hell to debug.</p>
+  </div>
+</section>
+
+<section id="latency">
+  <span class="num">Section 10</span>
+  <h2>Latency, battery, range — the honest numbers</h2>
+  <p class="section-sub">What Bluetooth actually does for you, and what it doesn't.</p>
+
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>BT (Xbox)</th><th>BT (DualSense)</th><th>USB-C wired</th><th>Xbox Wireless Adapter</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Input latency</td><td>~15–25 ms</td><td>~15–30 ms</td><td>~4–8 ms</td><td>~6–10 ms</td></tr>
+      <tr><td>Reliable range</td><td>~6–8 m line-of-sight</td><td>~6–8 m line-of-sight</td><td>cable length</td><td>~10–12 m line-of-sight</td></tr>
+      <tr><td>Battery (gig length)</td><td>30–40 h on 2×AA / built-in</td><td>10–15 h</td><td>charges in use</td><td>same as native</td></tr>
+      <tr><td>Drop risk</td><td>Medium (crowded 2.4 GHz)</td><td>Medium</td><td>Zero (cable doesn't decide)</td><td>Low</td></tr>
+    </tbody>
+  </table>
+
+  <p>Realistically: <strong>20 ms is fine for FX sweeps, clip launches, and parameter pushes.</strong> It's not fine for tight musical beat-launches where you're trying to hit the kick on the one. For beat-tight cues, use the wired MIDI controller and let the gamepad live in FX-and-vibes territory.</p>
+
+  <div class="callout warn">
+    <span class="label">Crowded venues = crowded 2.4 GHz</span>
+    <p>Bluetooth, Wi-Fi, wireless mics, wireless IEMs, and a thousand phones all live in 2.4 GHz. The more devices, the worse BT behaves. The Xbox Wireless Adapter is technically still 2.4 GHz but uses a different protocol that handles congestion better. If the venue is RF-soup, wire the controller with USB-C.</p>
+  </div>
+
+  <div class="callout">
+    <span class="label">Battery survival tips</span>
+    <p>Set the controller to power off after 15 minutes of inactivity during rehearsal so you don't drain it walking around. On the night, plug the pad into a power bank via USB-C as a permanent power source — the cable still passes signal as USB and the BT link goes idle. Best of both worlds.</p>
+  </div>
+</section>
+
+<section id="mac">
+  <span class="num">Section 11</span>
+  <h2>Doing it on a Mac</h2>
+  <p class="section-sub">Resolume runs on macOS too. The setup looks similar.</p>
+
+  <p>The Boog rig has Resolume on the Windows machine (see <a href="projection_setup_field_manual.html">Volume I</a>) so this is mostly a reference for the Mac side or for backup laptops. The shape is the same: pair gamepad → bridge app → virtual MIDI → Resolume.</p>
+
+  <ul>
+    <li><strong>Pairing</strong> — macOS Bluetooth settings, same pairing combos as Windows. The Xbox controller and DualSense both pair fine.</li>
+    <li><strong>Virtual MIDI cable</strong> — macOS has it built in. Open <code>Audio MIDI Setup → Window → Show MIDI Studio → IAC Driver</code>, tick "Device is online", add a port. Done.</li>
+    <li><strong>Bridge apps</strong> — <strong>ControllerMate</strong> (paid, mature, mac-native), or <strong>OSCulator</strong> (paid, well-loved for HID-to-MIDI/OSC), or <strong>Bome MIDI Translator Pro</strong> (cross-platform, same workflow as Windows). Free options on Mac are thinner than on Windows — Bome or OSCulator are the realistic picks.</li>
+    <li><strong>Resolume side</strong> — identical. Enable the IAC port under MIDI inputs, MIDI Learn, save.</li>
+  </ul>
+
+  <div class="callout info">
+    <span class="label">macOS gamepad framework</span>
+    <p>Apple's Game Controller framework handles Xbox and DualSense natively from macOS 11+. No drivers needed. If a bridge app says the controller isn't found, the bridge is using an older API — update or switch.</p>
+  </div>
+</section>
+
+<section id="troubleshoot">
+  <span class="num">Section 12</span>
+  <h2>Troubleshooting</h2>
+  <p class="section-sub">Click each one. Most live problems are in here.</p>
+
+  <details class="ts">
+    <summary>Controller pairs but Windows shows it as a generic HID and no axes work</summary>
+    <div class="body">
+      <p>This is a partial pair — the BT handshake completed but the HID descriptors didn't enumerate. Remove the device from <code>Settings → Bluetooth &amp; devices</code>, power-cycle the controller (hold the Xbox / PS button until off, then back on), and re-pair. If it persists, update the Xbox Accessories app (Microsoft Store) or the laptop's Bluetooth driver — but do this at home before the gig.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Bridge app sees the controller but Resolume sees no MIDI</summary>
+    <div class="body">
+      <p>Three-layer check: (1) Is loopMIDI running? Look in the system tray. (2) Is the bridge app pointed at the loopMIDI port as its output? Open its settings and confirm. (3) Is Resolume listening on that port? <code>Preferences → MIDI → Inputs</code> — the port should be ticked. Toggling Resolume's MIDI off and on again sometimes wakes it up if the bridge started after Resolume.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>MIDI is flowing but Resolume isn't capturing in MIDI Learn</summary>
+    <div class="body">
+      <p>You probably clicked the parameter <em>before</em> activating MIDI Learn mode. Click the big <strong>MIDI</strong> button at the top right (the screen tints), <em>then</em> click the parameter, <em>then</em> wiggle the control. Capture order matters.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Sticks are jittery / sending CC events when at rest</summary>
+    <div class="body">
+      <p>Analogue sticks drift. Set a <strong>deadzone</strong> in the bridge app — typically 5–10% on each axis. Below that threshold, the bridge ignores the input. Without a deadzone you'll fill Resolume's MIDI log with garbage and parameter values will twitch on a stationary stick.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Trigger feels "stuck" or never reaches 0</summary>
+    <div class="body">
+      <p>Triggers are physical springs and can mechanically rest at a non-zero position. Calibrate in the bridge app — most have a "set min/max" button. Pull the trigger fully, release fully, save. From now on the bridge maps physical range to MIDI 0–127.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Controller disconnects after a few minutes of no input</summary>
+    <div class="body">
+      <p>Both Xbox and DualSense have idle auto-off. On the Xbox pad you can disable / extend this in the Xbox Accessories app. On the DualSense there's no Windows-side toggle — keep the controller alive by mapping at least one stick to a continuously-watched parameter, or plug in USB-C.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Latency feels worse than 20 ms — events are noticeably late</summary>
+    <div class="body">
+      <p>Likely a 2.4 GHz collision. (1) Move the laptop closer to the controller. (2) Disable Wi-Fi on the laptop — you should be doing this anyway, see <a href="projection_setup_field_manual.html#offline">Volume I, Operating fully offline</a>. (3) If the venue is RF-soup, wire the controller with USB-C and call it done. Bluetooth is a soft target; a cable beats it every time.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>DualSense reconnects as a different controller every time</summary>
+    <div class="body">
+      <p>Windows occasionally enumerates the DualSense with a new HID path after each reconnect, which breaks bridge apps that key off a specific path. Update the bridge to a recent version, or pin the device to a fixed COM/USB descriptor through the bridge's settings. Bome MT Pro and rejoy both handle this well; older custom scripts often don't.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Bridge crashes mid-show</summary>
+    <div class="body">
+      <p>This is why the wired MIDI controller is doing show-critical cues, not the gamepad. Re-launch the bridge from the desktop shortcut, reconnect the controller in <code>joy.cpl</code> if needed, MIDI starts flowing again. Total recovery time should be under 30 seconds if you've practised it. <strong>Practise it.</strong></p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Everything was working at soundcheck, nothing is working now</summary>
+    <div class="body">
+      <p>Walk the chain: (1) Controller LED — is it on / connected? (2) <code>joy.cpl</code> — does the OS still see it? (3) Bridge app — is it open and receiving events? (4) loopMIDI — running in the tray? (5) Resolume MIDI input — still ticked? In about 80% of cases it's the controller falling asleep or BT dropping. Cable in, problem solved.</p>
+    </div>
+  </details>
+</section>
+
+<section id="checklist">
+  <span class="num">Section 13</span>
+  <h2>Show-day checklist</h2>
+  <p class="section-sub">Tick each. Trust nothing.</p>
+
+  <ul class="checklist">
+    <li><div class="box"></div><div>Controller(s) charged to 100% / fresh batteries installed.</div></li>
+    <li><div class="box"></div><div>Spare USB-C cable in arm's reach of the desk.</div></li>
+    <li><div class="box"></div><div>Controller firmware updated at home before the gig.</div></li>
+    <li><div class="box"></div><div>Bluetooth driver / Xbox Accessories app updated at home.</div></li>
+    <li><div class="box"></div><div>Controller paired and visible in <code>joy.cpl</code>.</div></li>
+    <li><div class="box"></div><div>loopMIDI launched, "boog-controller" port present.</div></li>
+    <li><div class="box"></div><div>Bridge app launched, controller selected, loopMIDI selected as output.</div></li>
+    <li><div class="box"></div><div>Bridge preset loaded from USB (not built from scratch).</div></li>
+    <li><div class="box"></div><div>Deadzones set on both analogue sticks (5–10%).</div></li>
+    <li><div class="box"></div><div>Resolume MIDI input enabled for the loopMIDI port.</div></li>
+    <li><div class="box"></div><div>Composition opened; mappings present (test one stick, one button).</div></li>
+    <li><div class="box"></div><div>Auto-power-off on the controller disabled or set to max.</div></li>
+    <li><div class="box"></div><div>Wi-Fi disabled on the laptop (also helps BT stability).</div></li>
+    <li><div class="box"></div><div>Power bank on standby in case BT needs swapping to USB-C.</div></li>
+    <li><div class="box"></div><div>Wired MIDI controller (Akai / Launchpad) also live and doing show-critical cues.</div></li>
+    <li><div class="box"></div><div>Practised the "bridge crash → recover" drill at least once today.</div></li>
+  </ul>
+</section>
+
+<section id="glossary">
+  <span class="num">Section 14</span>
+  <h2>Glossary</h2>
+  <p class="section-sub">Terms used in this manual.</p>
+
+  <dl class="glossary">
+    <dt>Bridge</dt>
+    <dd>An app that reads input from one protocol (HID gamepad) and writes output in another (MIDI). The middleware that makes the whole chain possible.</dd>
+
+    <dt>CC</dt>
+    <dd>Control Change. A MIDI message carrying a continuous value (0–127) on a specific controller number. Used for sticks, triggers, knobs — anything that sweeps.</dd>
+
+    <dt>Deadzone</dt>
+    <dd>A small range around the centre of an analogue stick within which input is ignored. Filters out drift on a physically idle stick.</dd>
+
+    <dt>DualSense</dt>
+    <dd>Sony's PS5 controller. Bluetooth-capable, USB-C, touchpad, gyro, adaptive triggers (over USB only on Windows).</dd>
+
+    <dt>HID</dt>
+    <dd>Human Interface Device. The USB / Bluetooth class that covers gamepads, keyboards, mice. Windows sees the controllers as HID, not MIDI.</dd>
+
+    <dt>IAC Driver</dt>
+    <dd>macOS's built-in virtual MIDI cable. The Mac equivalent of loopMIDI. Enabled in Audio MIDI Setup.</dd>
+
+    <dt>loopMIDI</dt>
+    <dd>Free Windows utility by Tobias Erichsen that creates virtual MIDI ports for app-to-app routing.</dd>
+
+    <dt>MIDI Learn</dt>
+    <dd>Resolume's mode where you click a parameter and wiggle a control to bind them. The fastest way to map a controller.</dd>
+
+    <dt>Note (MIDI)</dt>
+    <dd>A MIDI message with a pitch number (0–127) and a velocity. Used for buttons — press = Note On, release = Note Off.</dd>
+
+    <dt>XInput</dt>
+    <dd>Microsoft's modern gamepad API on Windows. What the Xbox controller speaks natively over USB and BT. DualSense usually presents as DirectInput / Windows.Gaming.Input.</dd>
+
+    <dt>Xbox Wireless Adapter</dt>
+    <dd>Microsoft's USB dongle that adds proprietary Xbox Wireless to a PC. Lower latency and more reliable than Bluetooth for the Xbox controller specifically.</dd>
+  </dl>
+</section>
+
+<footer>
+  END OF FIELD MANUAL · OFFLINE-SAFE · SINGLE FILE · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+</div>
+
+<script>
+  // Checklist toggle — in-memory only
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    li.addEventListener('click', function() { li.classList.toggle('done'); });
+  });
+
+  // Search / filter / highlight using safe DOM cloning (no innerHTML).
+  var search = document.getElementById('search');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section'));
+  var originalClones = new Map();
+  sections.forEach(function(s) { originalClones.set(s, s.cloneNode(true)); });
+
+  function restoreSection(s) {
+    var clone = originalClones.get(s).cloneNode(true);
+    s.replaceWith(clone);
+    var idx = sections.indexOf(s);
+    if (idx !== -1) sections[idx] = clone;
+    return clone;
+  }
+
+  function highlightInNode(node, q) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n) {
+        if (!n.parentNode) return NodeFilter.FILTER_REJECT;
+        var tag = n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var toReplace = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (n.nodeValue.toLowerCase().indexOf(q) !== -1) toReplace.push(n);
+    }
+    toReplace.forEach(function(n) {
+      var src = n.nodeValue;
+      var lower = src.toLowerCase();
+      var frag = document.createDocumentFragment();
+      var i = 0;
+      while (i < src.length) {
+        var hit = lower.indexOf(q, i);
+        if (hit === -1) {
+          frag.appendChild(document.createTextNode(src.slice(i)));
+          break;
+        }
+        if (hit > i) frag.appendChild(document.createTextNode(src.slice(i, hit)));
+        var span = document.createElement('span');
+        span.className = 'search-hit';
+        span.textContent = src.slice(hit, hit + q.length);
+        frag.appendChild(span);
+        i = hit + q.length;
+      }
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  search.addEventListener('input', function() {
+    var q = search.value.trim().toLowerCase();
+    sections.slice().forEach(function(s) {
+      var fresh = restoreSection(s);
+      if (!q) { fresh.style.display = ''; return; }
+      var text = fresh.textContent.toLowerCase();
+      if (text.indexOf(q) === -1) { fresh.style.display = 'none'; }
+      else { fresh.style.display = ''; highlightInNode(fresh, q); }
+    });
+    document.querySelectorAll('.checklist li').forEach(function(li) {
+      li.addEventListener('click', function() { li.classList.toggle('done'); });
+    });
+  });
+</script>
+</body>
+</html>

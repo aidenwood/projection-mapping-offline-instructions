@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projection Mapping Rig — Field Manual</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--serif); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { display: flex; min-height: 100vh; }
+  nav.toc { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { flex: 1; max-width: 820px; padding: 48px 56px 120px; }
+  @media (max-width: 900px) { .wrap { flex-direction: column; } nav.toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); } main { padding: 32px 22px 80px; } }
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 40px; }
+  .masthead .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .masthead h1 { font-family: var(--mono); font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .masthead .lede { color: var(--muted); font-style: italic; max-width: 60ch; margin: 0; }
+  .toc-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocstep; }
+  .toc li { margin-bottom: 6px; counter-increment: tocstep; }
+  .toc a { color: var(--text); text-decoration: none; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; display: block; padding: 6px 0 6px 32px; position: relative; border-left: 1px solid transparent; transition: all 0.15s ease; }
+  .toc a::before { content: counter(tocstep, decimal-leading-zero); position: absolute; left: 0; color: var(--muted); font-size: 10px; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); padding-left: 36px; }
+  .toc-back { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+  .toc-back:hover { color: var(--accent); }
+  .search-box { width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; margin-bottom: 22px; border-radius: 2px; }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-hit { background: rgba(255, 181, 71, 0.25); padding: 1px 2px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  section .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px; }
+  section h2 { font-family: var(--mono); font-weight: 600; font-size: 22px; margin: 0 0 8px; line-height: 1.2; }
+  section .section-sub { color: var(--muted); font-style: italic; margin: 0 0 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); }
+  h3 { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 32px 0 12px; }
+  h4 { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+  p { margin: 0 0 14px; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); padding: 1px 6px; border-radius: 2px; color: var(--accent); }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: stepc; }
+  ol.steps > li { counter-increment: stepc; padding: 18px 0 18px 56px; border-bottom: 1px solid var(--border); position: relative; }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before { content: counter(stepc, decimal-leading-zero); position: absolute; left: 0; top: 18px; font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; background: var(--surface-2); padding: 4px 8px; border: 1px solid var(--border); }
+  ol.steps > li p:last-child { margin-bottom: 0; }
+  .callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 14px 18px; margin: 18px 0; font-size: 14.5px; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.info { border-left-color: var(--info); }
+  .callout .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 6px; }
+  .callout.warn .label { color: var(--warn); }
+  .callout.ok .label { color: var(--ok); }
+  .callout.info .label { color: var(--info); }
+  .callout p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: var(--mono); font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; background: var(--surface); }
+  tr:hover td { background: var(--surface); }
+  .diagram { background: var(--surface); border: 1px solid var(--border); padding: 24px; margin: 22px 0; overflow-x: auto; }
+  .diagram pre { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--text); margin: 0; white-space: pre; }
+  .diagram .caption { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+  .ts { background: var(--surface); border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; }
+  .ts summary { cursor: pointer; padding: 14px 18px; font-family: var(--mono); font-size: 13px; list-style: none; color: var(--warn); font-weight: 600; user-select: none; position: relative; padding-right: 40px; }
+  .ts summary::-webkit-details-marker { display: none; }
+  .ts summary::after { content: "+"; position: absolute; right: 18px; top: 12px; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+  .ts[open] summary::after { content: "−"; }
+  .ts .body { padding: 4px 18px 18px; border-top: 1px solid var(--border); }
+  .ts .body p:first-child { margin-top: 12px; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--surface); display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.15s; font-size: 14.5px; }
+  .checklist li:hover { border-color: var(--accent-dim); }
+  .checklist li.done { opacity: 0.45; text-decoration: line-through; }
+  .checklist .box { width: 14px; height: 14px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 4px; position: relative; }
+  .checklist li.done .box { background: var(--ok); border-color: var(--ok); }
+  .checklist li.done .box::after { content: "✓"; position: absolute; color: var(--bg); font-size: 12px; top: -3px; left: 1px; font-weight: bold; }
+  dl.glossary { margin: 0; }
+  dl.glossary dt { font-family: var(--mono); color: var(--accent); font-size: 13px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  dl.glossary dd { margin: 4px 0 0; padding-left: 0; }
+  footer { border-top: 1px solid var(--border); margin-top: 80px; padding-top: 22px; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; }
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <a class="toc-back" href="manuals_index.html">&larr; Manual index</a>
+  <div class="toc-title">Field Manual</div>
+  <input type="text" id="search" class="search-box" placeholder="Search the manual..." />
+  <ol class="toc">
+    <li><a href="#overview">Rig at a glance</a></li>
+    <li><a href="#signal">Signal flow</a></li>
+    <li><a href="#hardware">Hardware inventory</a></li>
+    <li><a href="#boot">Show-day boot order</a></li>
+    <li><a href="#resolume">Resolume — the main machine</a></li>
+    <li><a href="#mapping">Projection mapping basics</a></li>
+    <li><a href="#audio">Audio &amp; timecode</a></li>
+    <li><a href="#dmx">DMX &amp; lighting hooks</a></li>
+    <li><a href="#offline">Operating fully offline</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Show-day checklist</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual · Volume I</div>
+  <h1>Projection Mapping Rig — Whole Setup</h1>
+  <p class="lede">Your entire show in one document: Windows main machine running Resolume Arena, a Mac running TouchDesigner bridged in over NDI, projection onto a mapped stage, DMX par cans, and how to run all of it without a single line of internet.</p>
+</header>
+
+<section id="overview">
+  <span class="num">Section 01</span>
+  <h2>Rig at a glance</h2>
+  <p class="section-sub">A bird's-eye view of every box on the truck and what role it plays.</p>
+
+  <p>This is a multi-machine projection mapping rig. The Windows machine running Resolume Arena is the <strong>show brain</strong> — it owns the projector output, the DMX universe, and the master clock. Everything else is a feeder or a follower.</p>
+
+  <p>You have two primary content sources:</p>
+  <ul>
+    <li><strong>Resolume Arena (Windows)</strong> — main composition, clip playback, beat-synced effects, projection mapping via Advanced Output, DMX output via Lumiverse.</li>
+    <li><strong>TouchDesigner (Mac)</strong> — generative content, real-time PBR materials over the stage map, particles, anything Resolume can't natively do. Bridges to Resolume over NDI.</li>
+  </ul>
+
+  <p>Two output targets:</p>
+  <ul>
+    <li><strong>Projector</strong> — hard-edged onto a mapped surface (cyc, stage flats, a sculpture, whatever you've built for this gig).</li>
+    <li><strong>DMX fixtures</strong> — par cans flanking the projection, plus any moving heads. Driven by Resolume Lumiverse out an Art-Net node.</li>
+  </ul>
+
+  <div class="callout info">
+    <span class="label">Why the split</span>
+    <p>Resolume is unbeatable at clip launch, layer compositing, and reliable projection out. It is mediocre at generative 3D, PBR, and shader work. TouchDesigner is the opposite. Bridging them with NDI gives you both without trying to force either tool to do the other's job.</p>
+  </div>
+</section>
+
+<section id="signal">
+  <span class="num">Section 02</span>
+  <h2>Signal flow</h2>
+  <p class="section-sub">Where every pixel and packet goes, in order.</p>
+
+  <div class="diagram">
+    <div class="caption">End-to-end signal map</div>
+<pre>
+   ┌──────────────────────┐         NDI over Ethernet
+   │   Mac (TouchDesigner)│ ───────────────────────────────┐
+   │   PBR + generative   │                                 │
+   └──────────────────────┘                                 ↓
+                                                ┌──────────────────────┐
+                                                │ Windows (Resolume    │
+                                                │ Arena) — show brain  │
+                                                │                      │
+                                                │ NDI source as layer  │
+                                                │ Composition out      │──→ HDMI ──→ [Projector] ──→ Stage
+                                                │ Lumiverse DMX out    │
+                                                │ MIDI/OSC in          │
+                                                └──────────────────────┘
+                                                          │
+                                                          │ Art-Net / sACN over Ethernet
+                                                          ↓
+                                                ┌──────────────────────┐
+                                                │ DMX node             │ ──→ XLR ──→ [Par 1] ──→ [Par 2] ──→ Term
+                                                └──────────────────────┘
+
+   [MIDI controller] ──USB──→ Windows (Resolume clip launch, FX dials)
+   [Audio interface] ──USB──→ Windows (BPM detect, audio FX)
+</pre>
+  </div>
+
+  <p>Read it once before you patch a single cable. If you can't draw this diagram on the back of a setlist, you're not ready to run the show.</p>
+</section>
+
+<section id="hardware">
+  <span class="num">Section 03</span>
+  <h2>Hardware inventory</h2>
+  <p class="section-sub">Everything that needs to come out of the case before doors.</p>
+
+  <h4>Compute</h4>
+  <ul>
+    <li>Windows machine — main, running Resolume Arena. Discrete GPU, two display outputs minimum (one for monitor, one for projector).</li>
+    <li>Mac — secondary, running TouchDesigner. Any model with a halfway decent GPU works for what we're doing.</li>
+  </ul>
+
+  <h4>Networking</h4>
+  <ul>
+    <li>Gigabit Ethernet switch — 5-port unmanaged is fine. Don't skimp; 100 Mbit will choke NDI at 1080p.</li>
+    <li>Three Cat6 cables: Windows ↔ switch, Mac ↔ switch, DMX node ↔ switch. Test each one before the show with a cable tester or by checking link lights.</li>
+    <li>No router. No internet. The switch is the entire network.</li>
+  </ul>
+
+  <h4>Display</h4>
+  <ul>
+    <li>Projector — whatever you're using. Know its native resolution and lumen rating. Bring a spare HDMI cable.</li>
+    <li>HDMI cable from Windows to projector. If it's a long run (over ~8m), use an active/fibre HDMI or you'll get sparkle and dropouts.</li>
+    <li>Operator monitor for Windows.</li>
+  </ul>
+
+  <h4>DMX / lighting</h4>
+  <ul>
+    <li>Art-Net node — Enttec ODE, generic Chinese unit, doesn't matter as long as you've tested it.</li>
+    <li>DMX cables, 120-ohm terminator, fixtures, power cables. Full chain detail is in the <strong>DMX Par Cans</strong> field manual.</li>
+  </ul>
+
+  <h4>Audio / control</h4>
+  <ul>
+    <li>Audio interface for BPM detection and audio-reactive FX.</li>
+    <li>MIDI controller (Akai APC, Novation Launchpad, Korg nanoKONTROL — whatever you've mapped to).</li>
+    <li>USB hub if you're running out of ports on the Windows machine.</li>
+  </ul>
+
+  <h4>Spares — non-negotiable</h4>
+  <ul>
+    <li>One spare HDMI, one spare Ethernet, one spare XLR/DMX, one spare USB cable per controller type.</li>
+    <li>Power board with switches per outlet. Gaffer tape. A torch. A multi-tool.</li>
+    <li>USB stick with installers for Resolume, TouchDesigner non-commercial, NDI Tools, and your Art-Net node config utility. Internet will not save you on the day.</li>
+  </ul>
+</section>
+
+<section id="boot">
+  <span class="num">Section 04</span>
+  <h2>Show-day boot order</h2>
+  <p class="section-sub">The order matters. Doing this out of sequence costs you 20 minutes of debugging.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Power the switch first.</strong> Wait for all link lights to come up steady before plugging anything in. A switch that's still negotiating won't let Art-Net through cleanly.</p>
+    </li>
+    <li>
+      <p><strong>Plug Ethernet from both computers and the DMX node into the switch.</strong> Confirm link LED on each port. No link = bad cable or bad port. Swap before powering further.</p>
+    </li>
+    <li>
+      <p><strong>Power on the DMX node and fixtures.</strong> Fixtures will boot to their default state — par cans usually blackout, moving heads will home (calibrate their pan/tilt motors). Let the moving heads finish homing before you do anything else; they make horrible noises and you don't want to confuse "homing" with "broken."</p>
+    </li>
+    <li>
+      <p><strong>Power on the projector.</strong> It needs the longest warm-up time of anything in the rig. Lamp projectors need 60+ seconds, even laser ones want 30. Get it lit early.</p>
+    </li>
+    <li>
+      <p><strong>Power on the Windows machine.</strong> Confirm static IPs are set (see the network sections of the individual manuals). Disable Wi-Fi. Open Resolume Arena <em>after</em> the projector has reached its native resolution, otherwise Windows may decide your projector is 720p and Resolume will inherit that.</p>
+    </li>
+    <li>
+      <p><strong>Power on the Mac.</strong> Confirm static IP. Disable Wi-Fi. Open TouchDesigner and load your project. Don't start any NDI senders yet — Resolume needs to be receiving first if you want to verify the link.</p>
+    </li>
+    <li>
+      <p><strong>Open Resolume Arena.</strong> Load the show composition. Verify Advanced Output is targeting the right screen. Verify Lumiverse is sending to the correct Art-Net node IP.</p>
+    </li>
+    <li>
+      <p><strong>Start the NDI sender in TouchDesigner.</strong> In Resolume, add an NDI Source layer. The Mac's stream should show up in the source list within a few seconds. If it doesn't, see <a href="ndi_mac_windows_field_manual.html">the NDI manual</a>.</p>
+    </li>
+    <li>
+      <p><strong>Run a soft test of every layer.</strong> Trigger one clip per column. Fade DMX up and down. Tilt a moving head. Confirm projection mapping aligns with the surface. Now you're ready for doors.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">Don't skip the soft test</span>
+    <p>It takes 90 seconds and catches the things that will otherwise blow up at 30 seconds before showtime. The single biggest cause of show-night panic is "it was working in soundcheck and now it isn't" — and almost every time it's a cable that got bumped during the changeover.</p>
+  </div>
+</section>
+
+<section id="resolume">
+  <span class="num">Section 05</span>
+  <h2>Resolume — the main machine</h2>
+  <p class="section-sub">Settings to lock in before the doors open.</p>
+
+  <h4>Preferences worth checking</h4>
+  <ul>
+    <li><code>Preferences → Video → Renderer</code> — set to your GPU explicitly, not "Auto." Auto can pick the integrated GPU on hybrid systems.</li>
+    <li><code>Preferences → Audio</code> — set the audio interface as the input device so BPM detection works.</li>
+    <li><code>Preferences → DMX → Lumiverse</code> — confirm Art-Net is enabled, the node's IP is reachable, universe number matches your fixture profile.</li>
+    <li><code>Preferences → MIDI</code> — confirm your controller is enabled. Map clip launch buttons now, not during the show.</li>
+    <li><code>Preferences → OSC</code> — turn on if you're sending OSC from TouchDesigner for parameter control. Default port 7000.</li>
+  </ul>
+
+  <h4>The Advanced Output window</h4>
+  <p>This is where projection mapping lives. <code>Output → Advanced</code>. The left panel is your composition; the right panel is what gets sent to which physical screen. Drag a <strong>slice</strong> from the composition onto a screen, then warp the corners to match your surface.</p>
+
+  <p>Lock the Advanced Output file once you've mapped. Save it. Then save it again under a different name as a backup, on a separate drive. If you lose your mapping the night of the show, you are sunk — there is no quick way to rebuild it.</p>
+
+  <div class="callout info">
+    <span class="label">Slices vs screens</span>
+    <p>A <strong>screen</strong> in Resolume is a physical output (an HDMI port). A <strong>slice</strong> is a quad with input UVs and output corners — you can have many slices feeding one screen. For a single-projector setup, you usually want one screen and one or more slices per mapped surface.</p>
+  </div>
+</section>
+
+<section id="mapping">
+  <span class="num">Section 06</span>
+  <h2>Projection mapping basics</h2>
+  <p class="section-sub">A working method for getting pixels to line up with physical things.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Set the projector to its native resolution.</strong> Anything else introduces internal scaling that softens the image and shifts the keystone subtly. Look up the spec; force the Windows display to match.</p>
+    </li>
+    <li>
+      <p><strong>Set the composition resolution to match the projector.</strong> <code>Composition → Settings</code>. If your projector is 1920×1200, set the comp to 1920×1200, not 1920×1080.</p>
+    </li>
+    <li>
+      <p><strong>Position the projector physically.</strong> Centred, lens shift used before you touch optical zoom, and ideally orthogonal to the main surface to minimise keystone correction. Every degree of off-axis softens detail at the edges.</p>
+    </li>
+    <li>
+      <p><strong>Open Advanced Output and add slices for each mapped surface.</strong> Start with a grid test pattern as the composition source — easiest reference for getting straight lines straight.</p>
+    </li>
+    <li>
+      <p><strong>Drag slice corners to align with your surface.</strong> Use the keyboard arrows for pixel-perfect nudges. The grid lines should land exactly on the edges of the physical object you're mapping onto.</p>
+    </li>
+    <li>
+      <p><strong>Add edge softening only at the very end</strong>, after geometry is locked. Soft edges on a misaligned slice will mask the misalignment until you turn them off and see the gap.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <span class="label">Mark the projector position</span>
+    <p>Once your map is dialled in, tape the projector's feet to the surface it's sitting on. Mark the lens position with a paint pen if you can. If the projector gets bumped during a changeover, you need to be able to return it to within a millimetre. A bumped projector with no reference marks is a 30-minute remap.</p>
+  </div>
+</section>
+
+<section id="audio">
+  <span class="num">Section 07</span>
+  <h2>Audio &amp; timecode</h2>
+  <p class="section-sub">How the show stays in sync with whatever's making noise.</p>
+
+  <h4>Audio in</h4>
+  <p>The simplest workflow: a feed from the FOH desk into your audio interface, Resolume listens to that input, tap-tempos lock to it, audio-reactive effects modulate from the levels. You want a line-level signal — ask the FOH engineer for a post-fader monitor send.</p>
+
+  <h4>BPM &amp; clock</h4>
+  <p>Resolume can detect BPM from audio, but it's unreliable on anything other than a four-on-the-floor kick. For genres where BPM detection struggles (live bands, anything with rubato), tap-tempo manually with a MIDI button or a keyboard key. Don't try to "fix" the BPM detector mid-show — just tap it.</p>
+
+  <h4>Timecode</h4>
+  <p>If the music is on click and you've got a timecode source (LTC, MTC), you can drive Resolume's transport from it. <code>Preferences → MIDI → MTC In</code>. Lock comp playback to MTC and you'll never have to launch a clip manually for that segment of the show. This is overkill for most gigs but lifesaving for tightly scripted ones.</p>
+</section>
+
+<section id="dmx">
+  <span class="num">Section 08</span>
+  <h2>DMX &amp; lighting hooks</h2>
+  <p class="section-sub">Coloured pars taking their colour from the projection.</p>
+
+  <p>Detail of how to address fixtures and configure Lumiverse lives in the separate <strong>DMX Par Cans</strong> field manual. What lives here is the integration story: the rig is set up so the pars sample colour from the edges of the composition and extend the projection's palette out into the room.</p>
+
+  <p>If you want pars highlighting a 3D feature on the mapped surface — say, picking out the silhouette of a sculpture with a moving spot — that's the territory of the <a href="pbr_stage_map_field_manual.html">PBR &amp; moving lights manual</a>. The short version: place a virtual fixture inside Lumiverse whose pickup point is on the part of the composition where the PBR overlay is rendered, and the par will track its colour automatically.</p>
+</section>
+
+<section id="offline">
+  <span class="num">Section 09</span>
+  <h2>Operating fully offline</h2>
+  <p class="section-sub">The internet is not coming to save you. Here's how to ensure you don't need it.</p>
+
+  <h4>Before you leave the studio</h4>
+  <ul>
+    <li>Open Resolume Arena while online and let it check its licence. The licence check caches for a long time. If you've launched it within the last week or two on the same machine, it will run offline at the venue.</li>
+    <li>Same for TouchDesigner — open it, sign in to the non-commercial licence (or your paid one), let it phone home once.</li>
+    <li>Pre-cache all your media. Resolume's preview generation is slow on first load. Open the composition, scroll through every column, let every clip generate its thumbnail and audio cache.</li>
+    <li>Disable auto-update on Windows and macOS. An update prompt mid-show is a nightmare scenario.</li>
+    <li>Turn off any cloud sync (Dropbox, iCloud, OneDrive) that touches the show folder. It will choke when offline and slow file I/O.</li>
+  </ul>
+
+  <h4>At the venue</h4>
+  <ul>
+    <li>Disable Wi-Fi on both machines. This is a hard rule — see the network section of the other manuals for why.</li>
+    <li>Don't bring up any browser. If you accidentally open Chrome and it tries to sync 500 tabs over a dead connection, you'll hammer the network.</li>
+    <li>Your "network" is just the switch. Static IPs only.</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="label">Licence catch</span>
+    <p>If a software licence happens to time out the day of the show and you have no internet, you are dead in the water. Mitigate by: (1) launching every piece of software at home the morning of the show, (2) packing a phone hotspot as a last-ditch emergency tether, (3) knowing the offline activation procedure for your Resolume licence in advance.</p>
+  </div>
+</section>
+
+<section id="troubleshoot">
+  <span class="num">Section 10</span>
+  <h2>Troubleshooting</h2>
+  <p class="section-sub">The most common symptoms and how to chase them down.</p>
+
+  <details class="ts">
+    <summary>Projector shows the desktop, not Resolume's output</summary>
+    <div class="body">
+      <p>Resolume isn't routing to the right screen. <code>Output → Advanced</code> → check that a screen exists for the projector's resolution and is set to Fullscreen. Common cause: Windows reassigned display IDs after a cable reconnect. Solution: re-pick the screen in Advanced Output, or in <code>Output → Screen → Display</code>.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>NDI source from the Mac isn't showing up on Windows</summary>
+    <div class="body">
+      <p>See the NDI field manual for the full chase. First two checks: (1) both machines on the same subnet — ping one from the other. (2) Wi-Fi disabled on the Mac. NDI defaults to whichever interface has the highest metric, and Wi-Fi often wins by default.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Resolume is dropping frames during the show</summary>
+    <div class="body">
+      <p>Open the FPS meter (top right of the composition view). If it's below your composition framerate consistently, you're GPU- or disk-bound. Quick wins: lower preview resolution in <code>Preferences → Video</code>, close other GPU-heavy apps, make sure clips are on an SSD not a spinning disk, drop the NDI source's resolution if it's running 4K when 1080p would do.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Audio analysis isn't responding to music</summary>
+    <div class="body">
+      <p><code>Preferences → Audio</code> — confirm the right input device is selected and the level meter is moving. If the meter is flat, you have no signal — bad cable or wrong source. If the meter is moving but BPM isn't detecting, tap-tempo manually and keep going.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>DMX pars aren't responding at all</summary>
+    <div class="body">
+      <p>Three-layer check: (1) is Lumiverse sending? Open the Lumiverse view in Resolume, drag a fader manually, watch for the node's DMX-out LED to blink. (2) Is the node receiving? Use the node's discovery utility to verify it sees Art-Net packets. (3) Is the fixture chain intact? Try plugging the node's DMX direct into par 2, bypassing par 1, to isolate a bad cable.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Everything looks dim or washed out on the projector</summary>
+    <div class="body">
+      <p>Common causes: (1) Windows is in HDR mode and Resolume is outputting SDR — turn HDR off. (2) Projector is in eco mode, raise lamp/laser power. (3) Composition is rendering in a low colour space — check <code>Composition → Settings → Color</code>. (4) Ambient stage light is killing your contrast — talk to LD about reducing front wash on the surface you're mapping onto.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>The whole rig was working, now it's not, and you didn't change anything</summary>
+    <div class="body">
+      <p>You changed something — you just didn't notice. The most common culprit during a gig: someone walked past and pulled a cable a few millimetres out of its socket. Walk the entire signal chain physically. Re-seat every connector. 90% of "I didn't change anything" problems are a loose connector. The other 10% are Windows quietly auto-updating a driver.</p>
+    </div>
+  </details>
+</section>
+
+<section id="checklist">
+  <span class="num">Section 11</span>
+  <h2>Show-day checklist</h2>
+  <p class="section-sub">Tick each one. Trust nothing.</p>
+
+  <ul class="checklist">
+    <li><div class="box"></div><div>Both machines launched while still on home internet, licences refreshed.</div></li>
+    <li><div class="box"></div><div>All media pre-cached — every clip thumbnail visible without lag.</div></li>
+    <li><div class="box"></div><div>USB stick with installers and backup show file in the kit bag.</div></li>
+    <li><div class="box"></div><div>Auto-update disabled on Windows and macOS.</div></li>
+    <li><div class="box"></div><div>Cloud sync paused or signed out on both machines.</div></li>
+    <li><div class="box"></div><div>Wi-Fi disabled on both machines.</div></li>
+    <li><div class="box"></div><div>Static IPs configured and pingable across the switch.</div></li>
+    <li><div class="box"></div><div>Switch powered, all link lights solid.</div></li>
+    <li><div class="box"></div><div>DMX node discoverable; fixtures addressed and homed.</div></li>
+    <li><div class="box"></div><div>Projector at native resolution; Windows display matches.</div></li>
+    <li><div class="box"></div><div>Advanced Output mapping loaded; geometry verified against grid pattern.</div></li>
+    <li><div class="box"></div><div>NDI source from the Mac visible in Resolume's source list.</div></li>
+    <li><div class="box"></div><div>Audio interface level meter moving when music plays.</div></li>
+    <li><div class="box"></div><div>MIDI controller mapped; soft-test every clip column.</div></li>
+    <li><div class="box"></div><div>DMX pars respond to a manual Lumiverse fader.</div></li>
+    <li><div class="box"></div><div>Backup show file saved to a second drive.</div></li>
+    <li><div class="box"></div><div>Projector position taped, lens position marked.</div></li>
+    <li><div class="box"></div><div>Spare cables (HDMI, Ethernet, XLR, USB) within arm's reach.</div></li>
+    <li><div class="box"></div><div>Torch, multi-tool, gaffer tape on the desk.</div></li>
+    <li><div class="box"></div><div>Phone hotspot configured but turned off — emergency only.</div></li>
+  </ul>
+</section>
+
+<section id="glossary">
+  <span class="num">Section 12</span>
+  <h2>Glossary</h2>
+  <p class="section-sub">Quick definitions for the rest of the manual set.</p>
+
+  <dl class="glossary">
+    <dt>Advanced Output</dt>
+    <dd>Resolume's projection mapping interface. Where you slice the composition into quads and warp them onto physical surfaces.</dd>
+
+    <dt>Art-Net</dt>
+    <dd>A protocol that carries DMX universes over Ethernet. The standard way to feed an Art-Net node from a computer.</dd>
+
+    <dt>Composition</dt>
+    <dd>Resolume's top-level project: layers, columns of clips, effects, and the master output. The thing you save as <code>.avc</code>.</dd>
+
+    <dt>Lumiverse</dt>
+    <dd>Resolume Arena's built-in DMX output feature. Lets you place virtual fixtures over the composition and pick up colour from them.</dd>
+
+    <dt>NDI</dt>
+    <dd>Network Device Interface. NewTek's protocol for sending video over Ethernet. Cross-platform, low-latency, gigabit-friendly.</dd>
+
+    <dt>PBR</dt>
+    <dd>Physically Based Rendering. A material model using albedo, normal, roughness, and metallic maps to make 3D surfaces look photoreal under lighting.</dd>
+
+    <dt>Slice</dt>
+    <dd>In Resolume Advanced Output, a quad with input UV coordinates and freely-warped output corners. The atomic unit of projection mapping.</dd>
+
+    <dt>Syphon</dt>
+    <dd>Mac-only protocol for passing video frames between apps on the same machine via shared GPU memory. The Mac equivalent of Windows' Spout.</dd>
+
+    <dt>TouchDesigner</dt>
+    <dd>Node-based real-time visual programming environment, particularly strong at generative content, shaders, and 3D scenes. Runs cross-platform.</dd>
+  </dl>
+</section>
+
+<footer>
+  END OF FIELD MANUAL · OFFLINE-SAFE · SINGLE FILE · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+</div>
+
+<script>
+  // Checklist toggle — in-memory only
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    li.addEventListener('click', function() { li.classList.toggle('done'); });
+  });
+
+  // Search / filter / highlight using safe DOM cloning (no innerHTML).
+  var search = document.getElementById('search');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section'));
+  var originalClones = new Map();
+  sections.forEach(function(s) { originalClones.set(s, s.cloneNode(true)); });
+
+  function restoreSection(s) {
+    var clone = originalClones.get(s).cloneNode(true);
+    s.replaceWith(clone);
+    var idx = sections.indexOf(s);
+    if (idx !== -1) sections[idx] = clone;
+    return clone;
+  }
+
+  function highlightInNode(node, q) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n) {
+        if (!n.parentNode) return NodeFilter.FILTER_REJECT;
+        var tag = n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var toReplace = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (n.nodeValue.toLowerCase().indexOf(q) !== -1) toReplace.push(n);
+    }
+    toReplace.forEach(function(n) {
+      var src = n.nodeValue;
+      var lower = src.toLowerCase();
+      var frag = document.createDocumentFragment();
+      var i = 0;
+      while (i < src.length) {
+        var hit = lower.indexOf(q, i);
+        if (hit === -1) {
+          frag.appendChild(document.createTextNode(src.slice(i)));
+          break;
+        }
+        if (hit > i) frag.appendChild(document.createTextNode(src.slice(i, hit)));
+        var span = document.createElement('span');
+        span.className = 'search-hit';
+        span.textContent = src.slice(hit, hit + q.length);
+        frag.appendChild(span);
+        i = hit + q.length;
+      }
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  search.addEventListener('input', function() {
+    var q = search.value.trim().toLowerCase();
+    sections.slice().forEach(function(s) {
+      var fresh = restoreSection(s);
+      if (!q) { fresh.style.display = ''; return; }
+      var text = fresh.textContent.toLowerCase();
+      if (text.indexOf(q) === -1) { fresh.style.display = 'none'; }
+      else { fresh.style.display = ''; highlightInNode(fresh, q); }
+    });
+    document.querySelectorAll('.checklist li').forEach(function(li) {
+      li.addEventListener('click', function() { li.classList.toggle('done'); });
+    });
+  });
+</script>
+
+</body>
+</html>

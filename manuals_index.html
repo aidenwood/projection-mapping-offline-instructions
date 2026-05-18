@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projection Mapping Field Manuals — Index</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 80px 40px 120px;
+  }
+  @media (max-width: 700px) { main { padding: 48px 22px 80px; } }
+
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 36px;
+    margin-bottom: 48px;
+  }
+  .masthead .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .masthead h1 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 38px;
+    line-height: 1.1;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .masthead .lede {
+    color: var(--muted);
+    font-style: italic;
+    max-width: 62ch;
+    margin: 0;
+    font-size: 17px;
+  }
+  .stamp {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ok);
+    border: 1px solid var(--ok);
+    padding: 4px 10px;
+    margin-top: 18px;
+    text-transform: uppercase;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin: 0 0 56px;
+  }
+  @media (min-width: 700px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .grid .span-2 { grid-column: 1 / -1; }
+  }
+  .card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 26px 28px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+  .card .vol {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card h2 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0 0 12px;
+    line-height: 1.25;
+    color: var(--text);
+  }
+  .card p {
+    color: var(--muted);
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .card .arrow {
+    position: absolute;
+    right: 22px;
+    bottom: 20px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--accent-dim);
+    transition: transform 0.18s ease;
+  }
+  .card:hover .arrow { transform: translateX(4px); color: var(--accent); }
+  .notice {
+    border-left: 3px solid var(--info);
+    background: var(--surface);
+    padding: 16px 20px;
+    margin: 0 0 36px;
+    font-size: 14.5px;
+  }
+  .notice .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--info);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .notice p:last-child { margin-bottom: 0; }
+  .notice p { margin: 0 0 10px; }
+  h3.section-head {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    margin: 0 0 18px;
+  }
+  ul.principles {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 56px;
+  }
+  ul.principles li {
+    padding: 14px 16px 14px 44px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    background: var(--surface);
+    position: relative;
+    font-size: 14.5px;
+  }
+  ul.principles li::before {
+    content: "→";
+    position: absolute;
+    left: 16px;
+    top: 14px;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  ul.principles strong { color: var(--text); font-family: var(--mono); font-size: 13px; }
+  footer {
+    border-top: 1px solid var(--border);
+    margin-top: 56px;
+    padding-top: 22px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual Set</div>
+  <h1>Projection Mapping Field Manuals</h1>
+  <p class="lede">Five standalone manuals for running a projection-mapped show with Resolume Arena on Windows, TouchDesigner on a Mac bridged in over NDI, DMX par cans, a PBR-shaded overlay that makes the projection surface look like a real material lit by moving lights, and Xbox / PS5 gamepads turned into wireless MIDI surfaces. Built for offline use — every page works without internet.</p>
+  <div class="stamp">Offline-safe · No dependencies · USB-portable</div>
+</header>
+
+<div class="notice">
+  <span class="label">Read me first</span>
+  <p>Each manual is a single self-contained HTML file. Drop the whole folder on a USB stick and you can read them anywhere without an internet connection. They open in any web browser.</p>
+  <p>Start with <strong>Volume I — Whole Setup</strong> if you're walking into the rig fresh. It links out to the other three when you need detail.</p>
+</div>
+
+<h3 class="section-head">The Set</h3>
+
+<div class="grid">
+
+  <a class="card span-2" href="projection_setup_field_manual.html">
+    <span class="vol">Volume I</span>
+    <h2>Projection Mapping Rig — Whole Setup</h2>
+    <p>The full picture: Windows main machine, Mac secondary, projector, DMX, audio in, MIDI control, switch, cabling. Signal flow diagrams, boot order, and how to run the whole rig fully offline at a venue with no internet.</p>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="ndi_mac_windows_field_manual.html">
+    <span class="vol">Volume II</span>
+    <h2>NDI Bridge — Mac TouchDesigner ↔ Windows Resolume</h2>
+    <p>Sending visuals between the Mac and Windows machines over Ethernet, either direction. Network setup, NDI Tools, sender/receiver setup in both apps, and keystoning from TouchDesigner if you want TD as the final mapping surface.</p>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="pbr_stage_map_field_manual.html">
+    <span class="vol">Volume III</span>
+    <h2>PBR Stage Map &amp; Moving-Light Overlay</h2>
+    <p>Rendering a PBR-shaded version of the stage geometry in TouchDesigner, lit by virtual moving lights, then projecting that over the base composition in Resolume. Includes how to drive physical par cans in sync with the virtual lighting.</p>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="dmx_par_field_manual.html">
+    <span class="vol">Volume IV · Reference</span>
+    <h2>DMX Par Cans driven by Resolume Arena</h2>
+    <p>The existing field manual for the DMX side of the rig — Art-Net network setup, wiring, addressing fixtures, configuring Lumiverse, troubleshooting the chain when nothing lights up. Referenced from the other three.</p>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="card" href="controller_midi_field_manual.html">
+    <span class="vol">Volume V</span>
+    <h2>Xbox &amp; PS5 Controllers as Wireless MIDI</h2>
+    <p>Pair a console gamepad to the show laptop over Bluetooth, bridge it to MIDI through loopMIDI, and MIDI-Learn the sticks, triggers, and buttons into Resolume. Suggested mappings, latency reality, and the trade-offs of wireless versus the Xbox Wireless Adapter or USB-C.</p>
+    <span class="arrow">→</span>
+  </a>
+
+</div>
+
+<h3 class="section-head">Operating Principles</h3>
+
+<ul class="principles">
+  <li><strong>The internet is not coming.</strong> Pre-cache everything, refresh licences at home, disable Wi-Fi at the venue. The network is just the switch.</li>
+  <li><strong>Static IPs, no DHCP.</strong> Every device on a known address. Ping before you click.</li>
+  <li><strong>Resolume is the show brain.</strong> It owns the projector and the DMX. TD is a feeder.</li>
+  <li><strong>NDI is the only cross-platform bridge.</strong> Syphon stays on Mac. Spout stays on Windows. NDI crosses the gap.</li>
+  <li><strong>Map the projector once, lock it forever.</strong> Tape the feet, mark the lens, back up the .avc and the .toe.</li>
+  <li><strong>Always have a baked fallback.</strong> Live-rendered NDI is wonderful when it works. A pre-rendered MP4 of the same content is your insurance.</li>
+</ul>
+
+<footer>
+  PROJECTION MAPPING FIELD MANUAL SET · OFFLINE-SAFE · SINGLE-FILE PAGES · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+
+</body>
+</html>

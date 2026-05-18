@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMX Par Cans + Resolume — Field Manual</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Layout */
+  .wrap { display: flex; min-height: 100vh; }
+  nav.toc {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 22px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  main {
+    flex: 1;
+    max-width: 820px;
+    padding: 48px 56px 120px;
+  }
+
+  @media (max-width: 900px) {
+    .wrap { flex-direction: column; }
+    nav.toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 32px 22px 80px; }
+  }
+
+  /* Header */
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+  }
+  .masthead .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .masthead h1 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .masthead .lede {
+    color: var(--muted);
+    font-style: italic;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  /* TOC */
+  .toc-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocstep; }
+  .toc li { margin-bottom: 6px; counter-increment: tocstep; }
+  .toc a {
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.5;
+    display: block;
+    padding: 6px 0 6px 32px;
+    position: relative;
+    border-left: 1px solid transparent;
+    transition: all 0.15s ease;
+  }
+  .toc a::before {
+    content: counter(tocstep, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); padding-left: 36px; }
+
+  .search-box {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    margin-bottom: 22px;
+    border-radius: 2px;
+  }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-hit { background: rgba(255, 181, 71, 0.25); padding: 1px 2px; }
+
+  /* Sections */
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  section .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+  section h2 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0 0 8px;
+    line-height: 1.2;
+  }
+  section .section-sub {
+    color: var(--muted);
+    font-style: italic;
+    margin: 0 0 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border);
+  }
+  h3 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 32px 0 12px;
+  }
+  h4 {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 24px 0 8px;
+  }
+  p { margin: 0 0 14px; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); padding: 1px 6px; border-radius: 2px; color: var(--accent); }
+
+  /* Steps */
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: stepc; }
+  ol.steps > li {
+    counter-increment: stepc;
+    padding: 18px 0 18px 56px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before {
+    content: counter(stepc, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    background: var(--surface-2);
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+  }
+  ol.steps > li p:last-child { margin-bottom: 0; }
+
+  /* Callouts */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 14.5px;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.info { border-left-color: var(--info); }
+  .callout .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.warn .label { color: var(--warn); }
+  .callout.ok .label { color: var(--ok); }
+  .callout.info .label { color: var(--info); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    background: var(--surface);
+  }
+  tr:hover td { background: var(--surface); }
+
+  /* Diagrams */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin: 22px 0;
+    overflow-x: auto;
+  }
+  .diagram pre {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+    margin: 0;
+    white-space: pre;
+  }
+  .diagram .caption {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Troubleshoot blocks */
+  .ts {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .ts summary {
+    cursor: pointer;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    list-style: none;
+    color: var(--warn);
+    font-weight: 600;
+    user-select: none;
+    position: relative;
+    padding-right: 40px;
+  }
+  .ts summary::-webkit-details-marker { display: none; }
+  .ts summary::after {
+    content: "+";
+    position: absolute;
+    right: 18px;
+    top: 12px;
+    color: var(--muted);
+    font-size: 18px;
+    transition: transform 0.2s;
+  }
+  .ts[open] summary::after { content: "−"; }
+  .ts .body { padding: 4px 18px 18px; border-top: 1px solid var(--border); }
+  .ts .body p:first-child { margin-top: 12px; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    background: var(--surface);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14.5px;
+  }
+  .checklist li:hover { border-color: var(--accent-dim); }
+  .checklist li.done { opacity: 0.45; text-decoration: line-through; }
+  .checklist .box {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--muted);
+    flex-shrink: 0;
+    margin-top: 4px;
+    position: relative;
+  }
+  .checklist li.done .box { background: var(--ok); border-color: var(--ok); }
+  .checklist li.done .box::after {
+    content: "✓";
+    position: absolute;
+    color: var(--bg);
+    font-size: 12px;
+    top: -3px;
+    left: 1px;
+    font-weight: bold;
+  }
+
+  /* Glossary */
+  dl.glossary { margin: 0; }
+  dl.glossary dt {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 13px;
+    margin-top: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  dl.glossary dd { margin: 4px 0 0; padding-left: 0; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    margin-top: 80px;
+    padding-top: 22px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">Field Manual</div>
+  <input type="text" id="search" class="search-box" placeholder="Search the manual…" />
+  <ol class="toc">
+    <li><a href="#overview">Overview &amp; gear list</a></li>
+    <li><a href="#concepts">Core concepts</a></li>
+    <li><a href="#network">Network setup</a></li>
+    <li><a href="#wiring">DMX wiring</a></li>
+    <li><a href="#address">Addressing the par cans</a></li>
+    <li><a href="#resolume">Resolume Arena config</a></li>
+    <li><a href="#pickups">Positioning the pickups</a></li>
+    <li><a href="#content">Designing content</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Pre-show checklist</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual</div>
+  <h1>DMX Par Cans driven by Resolume Arena</h1>
+  <p class="lede">Two RGBWAUV LED pars in 10-channel mode, flanking a projection, sampling colour from the live composition to extend visuals onto the trees behind the stage. Hardware, network, software, and what to do when none of it works.</p>
+</header>
+
+<!-- ============================================================ -->
+<section id="overview">
+  <span class="num">Section 01</span>
+  <h2>Overview &amp; gear list</h2>
+  <p class="section-sub">What this manual gets you to, and the kit you need on the bench before you start.</p>
+
+  <p>You're building a setup where two RGB DMX par cans, positioned either side of a projection screen, automatically take on colours sampled from the edges of the video that Resolume is sending to the projector. The result is that coloured light spills onto the trees and surroundings behind the stage in a way that extends the projected image — making the screen feel less like a window and more like a centre of mass for a wider lit environment.</p>
+
+  <p>You'll need all of the following on hand:</p>
+
+  <h4>Hardware</h4>
+  <ul>
+    <li>A computer running <code>Resolume Arena</code> (not Avenue — Avenue does not output DMX).</li>
+    <li>Two RGBWAUV LED par cans (Red, Green, Blue, White, Amber, UV — 6 emitters per fixture) with DMX in/out (3-pin or 5-pin XLR-style sockets), configured in 10-channel mode.</li>
+    <li>An Ethernet-to-DMX node (also called an Art-Net node or sACN node).</li>
+    <li>Power cables for the pars and the node.</li>
+    <li>Two DMX cables: one from the node to par 1, one from par 1 to par 2. Use proper 110-ohm DMX cable, not standard mic cable, for runs over a few metres. For short backstage hops, mic cable usually works but can introduce intermittent flicker on longer chains.</li>
+    <li>One 120-ohm DMX terminator (a male XLR plug with a resistor inside) for the end of the chain.</li>
+    <li>An Ethernet cable from the computer (or your router/switch) to the DMX node.</li>
+  </ul>
+
+  <h4>Information you need before you start</h4>
+  <ul>
+    <li>The <strong>DMX channel mode</strong> of your par cans (3-channel, 4-channel, 7-channel, etc.) and what each channel does. Check the manual or the fixture's onboard menu.</li>
+    <li>The <strong>IP address</strong> the node uses by default. Most nodes are either <code>2.x.x.x</code> (Art-Net default) or <code>192.168.x.x</code>. There's usually a sticker on it or a config tool from the manufacturer.</li>
+    <li>Whether your node speaks <strong>Art-Net</strong>, <strong>sACN (E1.31)</strong>, or both. Art-Net is the most common for small setups.</li>
+  </ul>
+
+  <div class="callout info">
+    <span class="label">Why Arena and not Avenue</span>
+    <p>Resolume sells two versions: Avenue (cheaper, no DMX output) and Arena (with DMX out, called <em>Lumiverse</em>, plus more advanced output mapping). If you open your software and there is no DMX or Lumiverse option anywhere in the menus, you have Avenue. There's no way to add DMX to Avenue short of upgrading the licence, or routing video out to a separate tool like MadMapper.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="concepts">
+  <span class="num">Section 02</span>
+  <h2>Core concepts you should understand first</h2>
+  <p class="section-sub">Five minutes of theory here will save you an hour of debugging later.</p>
+
+  <h4>DMX-512</h4>
+  <p>DMX-512 is a one-way serial protocol invented for stage lighting. A single DMX line is called a <strong>universe</strong> and carries 512 channels, each holding a value from 0 to 255. Every fixture on the line listens to a contiguous block of channels starting at its <strong>start address</strong>. So a 3-channel RGB par set to start at 1 listens to channels 1, 2, 3. Another 3-channel par on the same line set to start at 4 listens to channels 4, 5, 6. Two fixtures can share a start address — they'll just behave identically.</p>
+
+  <h4>Art-Net &amp; sACN</h4>
+  <p>Art-Net and sACN are protocols that carry DMX universes over Ethernet. Your computer sends DMX data to the node over the network; the node converts it to a real DMX signal on the XLR cable. From the fixtures' perspective, it's just DMX — they don't know or care that it came over Ethernet first. Art-Net universes are sometimes numbered from 0 (Art-Net's native scheme) and sometimes from 1 (the way most lighting consoles display them). This off-by-one is the single most common source of "why aren't my lights responding" pain. We'll come back to this.</p>
+
+  <h4>Lumiverse (Resolume's DMX feature)</h4>
+  <p>Lumiverse is Resolume Arena's built-in DMX output system. It lets you place <strong>virtual fixtures</strong> on a 2D layout that corresponds to your composition. Each fixture has a <strong>pickup point</strong> — a small region on the composition canvas. Whatever colour the video shows at that point gets sent out as the fixture's RGB values. Drag the pickup, the sampled region changes. Make it bigger, it averages over a larger area.</p>
+
+  <h4>The full chain in one sentence</h4>
+  <p>Resolume reads pixels under each fixture's pickup → packs them into a DMX universe → sends that universe over Ethernet as Art-Net → your node receives it and outputs real DMX on its XLR port → DMX cable carries the signal to par 1, then daisy-chains to par 2 → each par reads its own channels from the stream and sets its LEDs accordingly.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="network">
+  <span class="num">Section 03</span>
+  <h2>Network setup</h2>
+  <p class="section-sub">Getting your computer and the DMX node onto the same network so they can actually talk.</p>
+
+  <p>The computer and the node need to be on the same subnet, with IP addresses that match in the first three octets but differ in the last. There are a few topologies that work:</p>
+
+  <h4>Option A: Direct cable (recommended for live use)</h4>
+  <p>Plug an Ethernet cable directly from the computer's Ethernet port to the node. No router involved. This is the most reliable option for a show — no Wi-Fi dropouts, no router rebooting itself mid-set, no other network traffic competing for bandwidth.</p>
+  <p>Because there's no router doing DHCP, you'll need to set a <strong>static IP</strong> on the computer's Ethernet interface manually. Pick something in the same range as the node's default IP.</p>
+
+  <h4>Option B: Computer and node both on a router/switch</h4>
+  <p>Works fine if you have a router handing out DHCP addresses to both. Just be aware: if your computer is on Wi-Fi and the node is plugged in by Ethernet, both connections need to be on the same subnet, and the computer needs to be told which interface to send Art-Net out on. (See Resolume preferences below.)</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Look up the node's default IP.</strong> Common defaults: Enttec ODE Mk2 ships at <code>10.0.0.1</code>; many generic Chinese Art-Net nodes ship at <code>2.0.0.1</code> with subnet <code>255.0.0.0</code>; some configurable nodes ship in DHCP mode and will only get an IP if connected to a router. Check the sticker on your unit, or the included manual.</p>
+    </li>
+    <li>
+      <p><strong>Set the computer's Ethernet adapter to a matching static IP.</strong> If the node is <code>2.0.0.1</code>, set the computer to <code>2.0.0.10</code> with subnet <code>255.0.0.0</code>. If the node is <code>192.168.1.50</code>, set the computer to <code>192.168.1.10</code> with subnet <code>255.255.255.0</code>. Leave the gateway field blank or set it to the node's IP — it doesn't matter for Art-Net.</p>
+      <p>The examples below assume a node at <code>2.0.0.1</code>. Substitute your real values.</p>
+
+      <h4>macOS — detailed steps</h4>
+      <ol>
+        <li>Plug the Ethernet cable in (computer to node directly, no hub or switch needed — modern Macs auto-negotiate, no crossover cable required).</li>
+        <li>Open <code>System Settings</code> (or <code>System Preferences</code> on older macOS).</li>
+        <li>Click <code>Network</code> in the sidebar.</li>
+        <li>Find your Ethernet adapter in the list. It might be named "Ethernet", "USB 10/100/1000 LAN" (for USB-C to Ethernet adapters), or similar. Click it.</li>
+        <li>Click <code>Details…</code> (newer macOS) — older versions show the TCP/IP panel directly.</li>
+        <li>Select the <code>TCP/IP</code> tab.</li>
+        <li>Change <code>Configure IPv4</code> from "Using DHCP" to <strong>"Manually"</strong>.</li>
+        <li>Enter:
+          <ul>
+            <li>IP address: <code>2.0.0.10</code></li>
+            <li>Subnet mask: <code>255.0.0.0</code></li>
+            <li>Router: leave blank, or enter <code>2.0.0.1</code></li>
+          </ul>
+        </li>
+        <li>Click <code>OK</code>, then <code>Apply</code> if prompted.</li>
+      </ol>
+
+      <h4>Windows 10/11 — detailed steps</h4>
+      <ol>
+        <li>Plug the Ethernet cable in (computer to node directly).</li>
+        <li>Open <code>Settings</code> → <code>Network &amp; Internet</code> → <code>Ethernet</code> → click on the connection name.</li>
+        <li>Find "IP assignment" and click <code>Edit</code>.</li>
+        <li>Change the dropdown from "Automatic (DHCP)" to <strong>"Manual"</strong>.</li>
+        <li>Toggle IPv4 on. Enter:
+          <ul>
+            <li>IP address: <code>2.0.0.10</code></li>
+            <li>Subnet mask / prefix length: <code>255.0.0.0</code> (or <code>8</code> if it asks for a prefix length)</li>
+            <li>Gateway: leave blank, or enter <code>2.0.0.1</code></li>
+            <li>Preferred DNS: leave blank</li>
+          </ul>
+        </li>
+        <li>Click <code>Save</code>.</li>
+      </ol>
+      <p>Alternative classic-style Windows path: <code>Control Panel → Network and Sharing Center → Change adapter settings → right-click your Ethernet adapter → Properties → Internet Protocol Version 4 (TCP/IPv4) → Properties → Use the following IP address</code>. Same values as above.</p>
+    </li>
+    <li>
+      <p><strong>Test the connection with a ping.</strong> Open a terminal or command prompt and run <code>ping 2.0.0.1</code> (or whatever your node's IP is). You should see replies. If you see "Request timed out" or "Destination host unreachable", the network is not configured correctly — fix this before doing anything else. There is no point opening Resolume until the ping works.</p>
+    </li>
+    <li>
+      <p><strong>Run the node's discovery/config tool if it has one.</strong> Many nodes ship with a small utility (Enttec NMU, Madrix node config, generic Art-Net Discovery tools) that scans the network and shows any nodes found. If your tool finds the node, the network is happy. If it doesn't, you have a network problem, not a Resolume problem.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">Disable Wi-Fi during shows</span>
+    <p>If your computer is on Wi-Fi and Ethernet simultaneously, the OS may decide to send Art-Net out of the wrong interface, especially if both networks share IP ranges. Turn Wi-Fi off during shows, or explicitly tell Resolume which network interface to use (see Section 06).</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="wiring">
+  <span class="num">Section 04</span>
+  <h2>DMX wiring</h2>
+  <p class="section-sub">The physical chain from node to pars to terminator.</p>
+
+  <div class="diagram">
+    <div class="caption">Physical layout — DMX chain</div>
+<pre>
+   [Computer] ─── Ethernet ───→ [DMX Node]
+                                     │
+                                     │ DMX cable (XLR)
+                                     ↓
+                              ┌──────────────┐
+                              │  Par Can 1   │  Address: 001
+                              │   DMX IN     │  Mode: 10-channel RGBWAUV
+                              │   DMX OUT  ──┼──┐
+                              └──────────────┘  │
+                                                │ DMX cable (XLR)
+                                                ↓
+                              ┌──────────────┐
+                              │  Par Can 2   │  Address: 011
+                              │   DMX IN     │  Mode: 10-channel RGBWAUV
+                              │   DMX OUT  ──┼──┐
+                              └──────────────┘  │
+                                                ↓
+                                          [Terminator]
+                                          (120-ohm plug)
+</pre>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Power off the pars before plugging anything in.</strong> Not strictly required but good practice — a power-on inrush can confuse the addressing menu on cheaper fixtures.</p>
+    </li>
+    <li>
+      <p><strong>Connect Ethernet to the node, then power the node.</strong> Wait 10–20 seconds for it to boot fully. Most nodes have status LEDs — typically a "link" LED that goes solid when Ethernet is connected, and a "DMX" LED that flashes when DMX data is being sent out. Right now only the link LED should be on.</p>
+    </li>
+    <li>
+      <p><strong>Run a DMX cable from the node's DMX output to par 1's DMX IN.</strong> Note the direction matters: DMX is one-way, and the cable connects to the IN of the next device in the chain. If your par has both an IN and OUT (most do), you'll be using the IN socket here.</p>
+    </li>
+    <li>
+      <p><strong>Run a second DMX cable from par 1's DMX OUT to par 2's DMX IN.</strong> This is the daisy chain. The DMX signal passes through par 1 (it's still listening to its own channels) and continues on to par 2.</p>
+    </li>
+    <li>
+      <p><strong>Plug the terminator into par 2's DMX OUT.</strong> The terminator is a 120-ohm resistor inside an XLR housing — it absorbs the signal at the end of the chain so it doesn't reflect back down the cable and cause data corruption. For a two-fixture chain over short distances you can usually get away without one, but if you ever see random flickering, the missing terminator is the first thing to suspect.</p>
+    </li>
+    <li>
+      <p><strong>Power on the pars.</strong> They should come up to their default state (often blackout, sometimes a startup colour cycle). Don't be alarmed if they flash briefly.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">3-pin vs 5-pin XLR</span>
+    <p>DMX is officially specified as 5-pin XLR, but the entry-level and mid-tier fixture industry standardised on 3-pin XLR (using only 3 of the 5 pins). Your pars and node are almost certainly 3-pin. If you have one 3-pin and one 5-pin device, you'll need an adapter — don't try to use a standard mic cable as a substitute for a long run.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="address">
+  <span class="num">Section 05</span>
+  <h2>Addressing the par cans</h2>
+  <p class="section-sub">Telling each par which slice of the DMX universe it should listen to. Already done for this rig — kept here for reference and re-checking.</p>
+
+  <p>Each par needs three settings on its onboard menu: a <strong>program mode</strong> (which tells it to listen to DMX in the first place), a <strong>channel mode</strong> (how many channels it occupies), and a <strong>start address</strong> (the first channel it listens to). The menu is usually a small 3- or 4-digit LED display with a few buttons labelled MENU, UP, DOWN, ENTER, or similar.</p>
+
+  <h4>Step one — set the program mode to DMX</h4>
+  <p>Cheap and mid-tier pars usually offer several "personalities" or program modes. Only one of them listens to DMX; the rest run the fixture's internal show and ignore your data entirely. This is the single most overlooked setting on a new fixture.</p>
+  <table>
+    <thead><tr><th>Mode label</th><th>What it does</th><th>Use it?</th></tr></thead>
+    <tbody>
+      <tr><td>DMX / d001 / A001</td><td>Listens to incoming DMX data starting at the displayed address</td><td><strong style="color:var(--ok)">Yes — this is the one</strong></td></tr>
+      <tr><td>Auto / Program / Pr</td><td>Runs an internal automatic colour show, ignoring DMX</td><td>No</td></tr>
+      <tr><td>Static / St</td><td>Holds a single colour set via the menu, ignores DMX</td><td>No</td></tr>
+      <tr><td>Fade / Jump</td><td>Built-in colour-change patterns, ignores DMX</td><td>No</td></tr>
+      <tr><td>Sound / Music / SD</td><td>Reacts to a built-in microphone, ignores DMX</td><td>No</td></tr>
+      <tr><td>Slave / SL</td><td>Mirrors another fixture daisy-chained as master</td><td>No (we want independent control)</td></tr>
+    </tbody>
+  </table>
+  <p>When the display is just showing a 3-digit number with no other indicator (e.g. <code>001</code> or <code>011</code>), the fixture is usually already in DMX mode — that's the address it's listening at.</p>
+
+  <h4>Step two — channel mode: 10CH RGBWAUV</h4>
+  <p>RGBWAUV pars typically offer 6CH, 8CH, 10CH, 12CH, and 16CH modes. For this rig we're using <strong>10-channel mode</strong>, which gives us full direct control over all six emitters plus dimmer, strobe, and macro overrides.</p>
+
+  <p>Most 10-channel RGBWAUV pars use this layout (exact order can vary slightly between manufacturers — check the fixture manual to confirm):</p>
+  <table>
+    <thead><tr><th>Ch offset</th><th>Function</th><th>Resolume should send</th></tr></thead>
+    <tbody>
+      <tr><td>+0</td><td>Red</td><td>From video sample</td></tr>
+      <tr><td>+1</td><td>Green</td><td>From video sample</td></tr>
+      <tr><td>+2</td><td>Blue</td><td>From video sample</td></tr>
+      <tr><td>+3</td><td>White</td><td>0, or from white-extraction logic</td></tr>
+      <tr><td>+4</td><td>Amber</td><td>0 (pin)</td></tr>
+      <tr><td>+5</td><td>UV</td><td>0 (pin)</td></tr>
+      <tr><td>+6</td><td>Dimmer (master)</td><td>255 (pin to full)</td></tr>
+      <tr><td>+7</td><td>Strobe</td><td>0 (pin — no strobe)</td></tr>
+      <tr><td>+8</td><td>Macro / Programs</td><td>0 (pin — disables internal macros)</td></tr>
+      <tr><td>+9</td><td>Macro speed</td><td>0 (pin)</td></tr>
+    </tbody>
+  </table>
+
+  <p>"+0" means "the start address itself". So for par 1 at address 001: channel 1 = red, channel 2 = green, ..., channel 10 = macro speed.</p>
+
+  <h4>Step three — addresses for two pars in 10-channel mode</h4>
+  <table>
+    <thead><tr><th>Fixture</th><th>Start address</th><th>Occupies channels</th></tr></thead>
+    <tbody>
+      <tr><td>Par 1</td><td><code>001</code></td><td>1 through 10</td></tr>
+      <tr><td>Par 2</td><td><code>011</code></td><td>11 through 20</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <span class="label">Critical pinning for RGBWAUV in Lumiverse</span>
+    <p>Resolume samples colour from your composition as RGB pixels. It has no way to express "amber" or "UV" from a pixel — those are additional primaries beyond what a video frame contains. Without explicit pinning, the amber/UV/strobe/macro channels will receive whatever bytes happen to be in those DMX slots, which is unpredictable and can cause: random strobe firing, fixture macros activating mid-show, amber bleed in your colours, or UV glow on the trees when you didn't ask for it.</p>
+    <p>In Resolume's fixture profile, every non-RGB channel must be explicitly set to a fixed value — see Section 06 for how.</p>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Confirm both pars are in DMX program mode.</strong> If the display shows just a number with no letters prefix (e.g. <code>001</code>), you're in DMX mode. If it shows <code>Pr</code>, <code>SL</code>, <code>St</code>, <code>SD</code> or similar, navigate the menu to find the DMX/d-MX option.</p>
+    </li>
+    <li>
+      <p><strong>Confirm both pars are in 10CH mode.</strong> The menu label might be "CH", "MODE", "CHANNELS", or "PROFILE". Both fixtures <em>must</em> match — if one is 10CH and the other is 6CH, your channel maths will be wrong.</p>
+    </li>
+    <li>
+      <p><strong>Par 1 start address: 001.</strong> Display should read <code>001</code> or <code>A001</code>.</p>
+    </li>
+    <li>
+      <p><strong>Par 2 start address: 011.</strong> Display should read <code>011</code> or <code>A011</code>.</p>
+    </li>
+    <li>
+      <p><strong>Power-cycle both pars.</strong> Some fixtures only commit menu changes on reboot.</p>
+    </li>
+  </ol>
+</section>
+
+<!-- ============================================================ -->
+<section id="resolume">
+  <span class="num">Section 06</span>
+  <h2>Resolume Arena configuration</h2>
+  <p class="section-sub">Telling Resolume where to send Art-Net, what fixtures live on the universe, and how to test them.</p>
+
+  <p>Menus and naming have shifted slightly between Resolume versions (7.x has DMX under Output, newer versions consolidate it under Lumiverse). The concepts below apply regardless — find the equivalent panel in your version.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Open the DMX / Lumiverse panel.</strong> In Resolume 7: <code>Output → Advanced → DMX</code> tab. In newer versions there's usually a dedicated Lumiverse window accessible from the menu bar or by toggling a panel.</p>
+    </li>
+    <li>
+      <p><strong>Set the network interface.</strong> Somewhere in Resolume's preferences or the Lumiverse panel there's an "Adapter" or "Network Interface" setting. Set this explicitly to the Ethernet adapter connected to the node. If you leave it on "Auto" or "Default", Resolume may try to send Art-Net out of Wi-Fi and never reach the node.</p>
+    </li>
+    <li>
+      <p><strong>Add an output universe.</strong> Click "Add Universe" or "+". Choose your protocol: <strong>Art-Net</strong> for nearly all small setups. Set the universe number — start with <code>0</code>. (We may need to change this to <code>1</code> if the node disagrees; see troubleshooting below.)</p>
+    </li>
+    <li>
+      <p><strong>Set the target IP.</strong> Two options here:</p>
+      <p><strong>Unicast:</strong> Enter the node's specific IP address. Resolume sends Art-Net only to that address. Cleanest for live use.</p>
+      <p><strong>Broadcast:</strong> Enter the broadcast address for your subnet (e.g. <code>2.255.255.255</code> for a <code>2.x.x.x</code> network, or <code>255.255.255.255</code> for global broadcast). Resolume blasts Art-Net to every device on the network. Works but generates more network traffic.</p>
+      <p>Try unicast first. If the node doesn't respond, fall back to broadcast.</p>
+    </li>
+    <li>
+      <p><strong>Open the fixture library / patch panel.</strong> This is where you add virtual fixtures that map to your physical pars.</p>
+    </li>
+    <li>
+      <p><strong>Add fixture 1: try to find your par's exact model in Resolume's library.</strong> Resolume ships with profiles for many common fixtures. If yours is listed by exact model name <em>and</em> matches "10-channel mode" or "10CH", pick it — the channel pinning is probably already correct.</p>
+      <p>If your exact model isn't there, you have two choices: pick a generic "RGBWAUV 10CH" profile, or build your own custom profile. Building custom is more work but guaranteed correct, so we'll do that.</p>
+    </li>
+    <li>
+      <p><strong>Build a custom 10-channel fixture profile for RGBWAUV.</strong> In Resolume's fixture editor, create a new fixture with 10 channels mapped exactly as follows:</p>
+      <table>
+        <thead><tr><th>Channel</th><th>Function in profile</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Red</td><td>Driven by composition sample</td></tr>
+          <tr><td>2</td><td>Green</td><td>Driven by composition sample</td></tr>
+          <tr><td>3</td><td>Blue</td><td>Driven by composition sample</td></tr>
+          <tr><td>4</td><td>White</td><td><strong>Pin to 0</strong> (or use Resolume's "white extraction" if available — see callout below)</td></tr>
+          <tr><td>5</td><td>Amber</td><td><strong>Pin to 0</strong></td></tr>
+          <tr><td>6</td><td>UV</td><td><strong>Pin to 0</strong></td></tr>
+          <tr><td>7</td><td>Dimmer</td><td><strong>Pin to 255</strong> (or expose as fixture-level master dimmer)</td></tr>
+          <tr><td>8</td><td>Strobe</td><td><strong>Pin to 0</strong></td></tr>
+          <tr><td>9</td><td>Macro</td><td><strong>Pin to 0</strong></td></tr>
+          <tr><td>10</td><td>Macro speed</td><td><strong>Pin to 0</strong></td></tr>
+        </tbody>
+      </table>
+      <p>"Pin to N" means: in the fixture profile, set the channel type to a fixed value or constant, not a parameter driven by Lumiverse. The exact mechanism depends on Resolume's version, but typically each channel in the profile editor has a dropdown for its function — set the unused ones to "Constant" or "Fixed" with the indicated value.</p>
+    </li>
+    <li>
+      <p><strong>Confirm your par's actual channel order.</strong> RGBWAUV is the most common 10-channel layout, but a minority of fixtures use orders like RGBAWUV, RGBWAVU, or place the dimmer first. Check your par's manual or look in the fixture's onboard menu for a channel-test feature. If your channel order is different, edit the profile to match — getting this wrong is the cause of "red triggers amber" type confusion.</p>
+    </li>
+    <li>
+      <p><strong>Set fixture 1's address to universe 0, address 001.</strong> The address must match what's set on the physical par. Double-check.</p>
+    </li>
+    <li>
+      <p><strong>Add fixture 2 using the same custom profile, with start address 011.</strong></p>
+    </li>
+    <li>
+      <p><strong>Test fixture 1 with the manual colour picker.</strong> In the Lumiverse fixture view there's usually a way to override the fixture's colour with a colour picker or manual sliders. Set par 1 to bright red. The physical par 1 should immediately glow red. If it doesn't, stop and debug before continuing — see troubleshooting Section 09.</p>
+    </li>
+    <li>
+      <p><strong>Test red, green, and blue independently on par 1.</strong> Drive each channel to full one at a time. If "red" produces actual red, "green" produces actual green, and "blue" produces actual blue, your RGB channel order is correct. If any swap or shift, edit the profile to fix the channel mapping.</p>
+    </li>
+    <li>
+      <p><strong>Confirm no parasitic emitters.</strong> While testing pure red, look carefully at the par: do you see any amber tint, white wash, or UV glow? If yes, one of the W/A/UV channels isn't actually pinned to 0 in your profile — Resolume is putting unintended values there. Re-check the profile.</p>
+    </li>
+    <li>
+      <p><strong>Confirm no surprise behaviour.</strong> Drive all RGB channels to 0 and watch the par for 10 seconds. It should be completely dark. If it lights up at all (especially with macro patterns or strobe flashes), the macro or strobe channel isn't pinned to 0. Fix the profile.</p>
+    </li>
+    <li>
+      <p><strong>Repeat the manual test for fixture 2.</strong> Verify it lights up independently from fixture 1. If both pars respond to fixture 1's controls in Resolume, par 2 has the same start address as par 1 — go back and fix par 2's address.</p>
+    </li>
+    <li>
+      <p><strong>Remove any manual overrides</strong> so the fixtures take their colour from the composition rather than the override.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Optional — driving the White channel intelligently</span>
+    <p>Once everything works with W/A/UV pinned to 0, you can experiment with using the white channel for extra punch. A common trick: in the profile, set the white channel to be driven by the minimum of the R, G, B values. So if Resolume sends (255, 255, 255), white gets 255 and the colour primaries can be dropped accordingly — pure white looks much nicer with a dedicated white emitter than with all three RGB at full. Some Resolume profiles do this automatically as "RGB to RGBW conversion".</p>
+    <p>Amber and UV are harder to drive from sampled video and usually best left pinned to 0 — they'd require explicit colour-zone logic that Lumiverse doesn't really offer out of the box. If you want amber moments or UV punch, the cleaner approach is to expose those channels as manual sliders or layer-driven values and trigger them with content cues rather than from sampled pixels.</p>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">The universe 0 vs 1 trap</span>
+    <p>Art-Net internally numbers universes from 0. Many lighting consoles and node config screens display them starting from 1. If you set Resolume to universe 0 and the node's web interface shows universe 1, those are <em>the same universe</em>. If you set Resolume to universe 1 and the node also expects universe 1, you might actually be one off. If your test colour change in Resolume produces no light, swap Resolume's universe between 0 and 1 and try again before anything else.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="pickups">
+  <span class="num">Section 07</span>
+  <h2>Positioning the pickups</h2>
+  <p class="section-sub">Telling each virtual fixture which part of the composition canvas to sample its colour from.</p>
+
+  <p>In the Lumiverse fixture layout view there's a 2D representation of your composition canvas with the virtual fixtures shown as draggable points or boxes. Whatever colour appears at that point in the composition becomes the fixture's output colour, in real time.</p>
+
+  <div class="diagram">
+    <div class="caption">Pickup placement — matching pars to projection edges</div>
+<pre>
+    Composition canvas (what Resolume outputs to projector)
+    ┌─────────────────────────────────────────────────┐
+    │ ◉                                             ◉ │
+    │ │                                             │ │
+    │ │           [ main video content ]            │ │
+    │ │                                             │ │
+    │ ◉                                             ◉ │
+    └─────────────────────────────────────────────────┘
+      ↑                                             ↑
+      Fixture 1 pickup                Fixture 2 pickup
+      (samples left-edge colour)      (samples right-edge colour)
+
+    Physical layout:
+
+    [Par 1]    [Projector beam / screen]    [Par 2]
+       \\           |||||||||||||           /
+        \\          |||||||||||||          /
+         → trees   |||||||||||||   trees ←
+</pre>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Open the fixture layout view.</strong> This is the 2D canvas where you can drag fixtures around. The background should show a thumbnail of your current composition output.</p>
+    </li>
+    <li>
+      <p><strong>Drag fixture 1 to the far left edge of the composition.</strong> How close to the edge depends on your content — a few percent in from the absolute edge usually averages over more meaningful colour. If your content has a hard letterbox at the edges (black bars), move the pickup further in so it doesn't just sample black.</p>
+    </li>
+    <li>
+      <p><strong>Drag fixture 2 to the far right edge, symmetric to fixture 1.</strong> The visual symmetry on stage will read better if the sample points are also symmetric.</p>
+    </li>
+    <li>
+      <p><strong>Adjust the pickup size.</strong> Each fixture has a "size" or "area" property (sometimes a slider, sometimes a draggable bounding box). A larger area means the fixture averages colours over more pixels — smoother, less flickery, but less responsive to small details. A smaller area is more punchy but can flicker on detailed content. Try a region that's roughly 5–10% of the canvas width.</p>
+    </li>
+    <li>
+      <p><strong>Play a test clip and watch the pars.</strong> Run something with strong colour movement (a clip that goes red, green, blue, white, black in sequence works well). The pars should track. If they don't, see troubleshooting.</p>
+    </li>
+    <li>
+      <p><strong>Walk to the actual stage position</strong> and look at how the colour lands on the trees. You may need to come back and adjust pickup positions if the par output feels disconnected from what's on the screen — for example, if a clip has dark edges but a colourful centre, you might want the pickups inset from the edges to grab the more interesting colour.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <span class="label">Master dimmer per fixture</span>
+    <p>Each Lumiverse fixture has its own master dimmer, separate from the colour. If your pars are coming on at full brightness and blowing out the trees, drop the master dimmer on each fixture to something like 60–70%. This is a more reliable way to limit brightness than relying on darker video content.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="content">
+  <span class="num">Section 08</span>
+  <h2>Designing content for this setup</h2>
+  <p class="section-sub">How to make your visuals work <em>with</em> the lights rather than against them.</p>
+
+  <p>Once everything is wired and patched, the next reality check is that not all content drives lights well. A few principles that will save you grief:</p>
+
+  <h4>Saturated edges beat busy detail</h4>
+  <p>If your composition has a complex centre but washed-out grey edges, the pars are going to look like cheap work lights. Edge colour matters more here than overall colour, because that's what the pickups are reading. When picking or making clips, glance at the left and right edges specifically — is there colour <em>there</em>?</p>
+
+  <h4>White content makes white pars</h4>
+  <p>And white RGB pars usually look ugly on foliage — slightly green-tinted, flickery, not at all like daylight or moonlight. If your content goes to white frequently, either pull the par master dimmer down on those clips, mask the pickup zones, or accept the look and design around it.</p>
+
+  <h4>Build a dedicated DMX layer</h4>
+  <p>This is the single biggest quality-of-life upgrade. Make a new layer in Resolume that's hidden from the projector output (mute it on the output transform, or composite it below others with opacity 0 on screen but still readable by Lumiverse — depending on how your version of Arena routes content, you may need to experiment). Put solid colour blocks or wide gradients on this layer, positioned at the left and right edges of the canvas. The pickups read from <em>this</em> layer, not your main visuals.</p>
+  <p>The advantage: you can pick the lighting colour completely independently from the projected image. Want red lights during a blue projection? Easy. Want lights to pulse on the beat while the projection holds steady? Just animate the DMX layer.</p>
+
+  <h4>Avoid hard cuts unless you want hard cuts</h4>
+  <p>If your composition has a hard cut from colour A to colour B, the pars will switch instantly too. Sometimes that's the look you want — explosive, punctuating. But if you want the par colour transitions to feel atmospheric, add a transition or fade between clips on the DMX layer specifically.</p>
+
+  <h4>Be aware of projector latency</h4>
+  <p>Most projectors introduce 1–3 frames of input lag. LED pars are essentially instant. So the par colour change will hit the audience's eye slightly before the projected change does. For most content this is unnoticeable. For tight cuts on music, you can introduce a delay effect on the DMX layer (or on the fixture output if your Lumiverse version supports it) to nudge things back in sync.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="troubleshoot">
+  <span class="num">Section 09</span>
+  <h2>Troubleshooting</h2>
+  <p class="section-sub">Symptom → likely cause → fix. Click any heading to expand.</p>
+
+  <details class="ts">
+    <summary>No lights respond to anything in Resolume</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> Resolume is sending Art-Net to the wrong network interface, the wrong IP, or the wrong universe number.</p>
+      <p>Work through this in order:</p>
+      <ol>
+        <li>Ping the node from your computer. If ping fails, the network is broken — fix that first.</li>
+        <li>In Resolume's preferences, explicitly select the Ethernet adapter as the Art-Net network interface. Don't leave it on Auto.</li>
+        <li>Try switching the universe in Resolume between 0 and 1. The off-by-one between Art-Net's internal numbering and node config tools catches everyone.</li>
+        <li>Try switching from unicast to broadcast (e.g. <code>2.255.255.255</code>). If broadcast works and unicast doesn't, you have the node's IP wrong in Resolume's universe config.</li>
+        <li>Check the node's DMX activity LED. If it's not flashing, Resolume isn't reaching the node at all — network problem. If it <em>is</em> flashing but the pars are dark, the node is receiving data but it's not getting to the pars — DMX cable, addressing, or fixture mode problem.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Par 1 works, par 2 doesn't</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> The DMX cable between par 1 and par 2 is bad, plugged into the wrong sockets, or par 2's address is set wrong.</p>
+      <ol>
+        <li>Confirm the cable runs from par 1's <em>DMX OUT</em> to par 2's <em>DMX IN</em>. Reversed connections silently fail.</li>
+        <li>Swap the cable for a known-good one. DMX cables die — especially the cheap ones, especially after being coiled and uncoiled a hundred times.</li>
+        <li>Check par 2's address on its onboard display. If it shows <code>001</code> instead of <code>004</code>, both fixtures will respond to fixture 1's data in Resolume — and fixture 2 in Resolume will be sending data to channels nothing is listening to.</li>
+        <li>Swap the pars physically. If par 2 starts working in par 1's position, the problem is the cable or par 2's IN socket. If par 2 still doesn't work in par 1's position, par 2 itself is faulty.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Both pars light up but the colours are wrong</summary>
+    <div class="body">
+      <p><strong>Most likely (RGB pars):</strong> The fixture profile in Resolume has the wrong channel order. Some pars use R-G-B, some G-R-B, some B-G-R.</p>
+      <p><strong>Most likely (RGBWAUV pars):</strong> Either the channel order in the profile doesn't match your fixture's actual layout, or you're seeing parasitic emission from the W/A/UV channels because they aren't pinned to 0.</p>
+      <ol>
+        <li>In Resolume, manually drive each colour to full one at a time and note what the physical par shows.</li>
+        <li>If "red" in Resolume produces green on the par, your fixture profile has channels 1 and 2 swapped. Edit the profile to swap them.</li>
+        <li>If pure red looks pinkish or salmon-toned, the white channel is firing — check that channel 4 is pinned to 0 in the profile.</li>
+        <li>If pure red looks orangey, the amber channel is firing — check that channel 5 is pinned to 0.</li>
+        <li>If you see UV glow (a violet/blacklight cast on white objects), the UV channel is firing — check that channel 6 is pinned to 0.</li>
+        <li>If all colours look washed out and weak, the macro channel might be set to a value that triggers an internal preset that overrides your RGB — pin channel 9 to 0.</li>
+        <li>Confirm via the fixture's own onboard menu (most have a channel-test feature) that your par's actual layout matches what your profile assumes. Don't assume R-G-B-W-A-UV — some manufacturers reorder it.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Pars randomly strobe or flash patterns on their own</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> The strobe or macro channels aren't pinned to 0 in the fixture profile, so they're receiving random byte values from elsewhere in the DMX universe.</p>
+      <ol>
+        <li>In the fixture profile, confirm that the strobe channel (typically channel 8 in a 10CH RGBWAUV layout) is set to a constant 0.</li>
+        <li>Confirm the macro channel (typically channel 9) is set to a constant 0. Any non-zero value here can trigger built-in colour-change patterns that override RGB entirely.</li>
+        <li>Confirm the macro speed channel (typically channel 10) is set to 0.</li>
+        <li>If you've already pinned all of these and the strobe still fires, check the par's onboard menu for a "master strobe" or "sound mode" setting — it should be off / set to 0.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Both pars work but are very dim</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> A master dimmer channel somewhere in the chain is not at full.</p>
+      <ol>
+        <li>Check the par's channel mode. If it's 4CH+ (anything with a dedicated dimmer channel), the fixture profile in Resolume needs to set the dimmer to 255. Most built-in profiles do this automatically, but custom profiles might not.</li>
+        <li>Check the fixture's master dimmer in Lumiverse — it's a per-fixture slider that scales everything down.</li>
+        <li>Check the composition layer's opacity — if the layer the pickup is reading is at 50% opacity, the colours read out at 50% too.</li>
+        <li>Some pars have an onboard brightness limit in their menu (sometimes called "max output" or "DIM"). Check the par's menu — set it to 100%.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Pars flicker randomly</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> Missing terminator, bad DMX cable, or network packet loss.</p>
+      <ol>
+        <li>Put a 120-ohm terminator on the last fixture's DMX OUT. The single most common cause of flicker on small chains.</li>
+        <li>Swap the DMX cable between par 1 and par 2 for a known-good one.</li>
+        <li>If you're on Wi-Fi, switch to wired Ethernet. Wi-Fi drops packets, and dropped Art-Net packets cause flicker.</li>
+        <li>Check that no other software on your computer is also sending Art-Net (an old DMX program left running, a lighting console connected via Art-Net at the same time, etc.). Two Art-Net sources fighting on the same universe produces chaos.</li>
+        <li>If you have other devices on the network generating heavy traffic (file transfers, video streaming, etc.), disconnect them. Art-Net is timing-sensitive.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Manual colour picker works but video content doesn't drive the pars</summary>
+    <div class="body">
+      <p><strong>Most likely:</strong> The pickup point is over a black/empty area of the composition, or in a region that no layer occupies.</p>
+      <ol>
+        <li>Open the fixture layout view and check where the pickup actually is. Drag it onto a clearly coloured part of the composition.</li>
+        <li>Make sure the composition canvas is showing content. If you've muted all layers or have the composition blacked out, the pickups read black.</li>
+        <li>Some Lumiverse setups separate "screen" output from "Lumiverse" output — make sure the layers you want sampled aren't excluded from Lumiverse.</li>
+        <li>Check that you removed any manual colour override on the fixture. An override persists until you clear it, and it'll block sampled colour.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Node's link LED is off / Ethernet not detected</summary>
+    <div class="body">
+      <ol>
+        <li>Try a different Ethernet cable. Cheap cables fail more often than you'd expect.</li>
+        <li>If you're going through a switch, try direct cable instead.</li>
+        <li>Check that the computer's Ethernet port is enabled (some laptops have it disabled by default in BIOS or in OS settings).</li>
+        <li>If the node has a power LED that's off too — the node isn't powered. Check its power supply.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Both Wi-Fi and Ethernet active — confusing the network stack</summary>
+    <div class="body">
+      <p>Modern OSes try to be helpful by routing traffic out the "best" interface. For Art-Net you want explicit control.</p>
+      <ol>
+        <li>Easiest: disable Wi-Fi entirely during the show.</li>
+        <li>In Resolume, explicitly bind Art-Net output to the Ethernet adapter (not Auto).</li>
+        <li>On macOS, you can change the network service priority in <code>System Settings → Network → Set Service Order</code> — move Ethernet above Wi-Fi.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Pars respond but with noticeable lag behind the video</summary>
+    <div class="body">
+      <p>Usually a sign of either heavy CPU load on Resolume or a slow network path.</p>
+      <ol>
+        <li>Check Resolume's FPS — if it's struggling to render the composition, Lumiverse will lag too.</li>
+        <li>Wired Ethernet is much lower latency than Wi-Fi.</li>
+        <li>Some nodes have a buffer/smoothing setting in their config that adds delay. Check the node's web interface and turn smoothing down or off if present.</li>
+      </ol>
+    </div>
+  </details>
+</section>
+
+<!-- ============================================================ -->
+<section id="checklist">
+  <span class="num">Section 10</span>
+  <h2>Pre-show checklist</h2>
+  <p class="section-sub">Tap each item to mark it done. State is in-memory only — refreshing the page resets it.</p>
+
+  <ul class="checklist">
+    <li><span class="box"></span><span>Ethernet cable from computer to node — link LED solid on node</span></li>
+    <li><span class="box"></span><span>Computer's Ethernet adapter has correct static IP, in same subnet as node</span></li>
+    <li><span class="box"></span><span>Ping to node IP returns replies, not timeouts</span></li>
+    <li><span class="box"></span><span>DMX cable from node to par 1 DMX IN</span></li>
+    <li><span class="box"></span><span>DMX cable from par 1 DMX OUT to par 2 DMX IN</span></li>
+    <li><span class="box"></span><span>120-ohm terminator on par 2 DMX OUT</span></li>
+    <li><span class="box"></span><span>Both pars powered on, both showing their address on the onboard display</span></li>
+    <li><span class="box"></span><span>Both pars in DMX program mode (not Auto, Static, Sound, or Slave)</span></li>
+    <li><span class="box"></span><span>Both pars in 10-channel mode</span></li>
+    <li><span class="box"></span><span>Par 1 address set to 001</span></li>
+    <li><span class="box"></span><span>Par 2 address set to 011</span></li>
+    <li><span class="box"></span><span>Resolume Arena open, DMX/Lumiverse panel visible</span></li>
+    <li><span class="box"></span><span>Art-Net universe configured to match node (universe 0 or 1, IP correct)</span></li>
+    <li><span class="box"></span><span>Network interface in Resolume set to Ethernet, not Auto</span></li>
+    <li><span class="box"></span><span>Custom 10CH RGBWAUV fixture profile created with correct channel order</span></li>
+    <li><span class="box"></span><span>Profile: W, A, UV channels pinned to 0</span></li>
+    <li><span class="box"></span><span>Profile: dimmer channel pinned to 255 (or exposed as master)</span></li>
+    <li><span class="box"></span><span>Profile: strobe, macro, macro speed pinned to 0</span></li>
+    <li><span class="box"></span><span>Fixture 1 patched at universe 0, address 001</span></li>
+    <li><span class="box"></span><span>Fixture 2 patched at universe 0, address 011</span></li>
+    <li><span class="box"></span><span>Manual colour test: par 1 produces clean red, green, blue with no amber/UV/white bleed</span></li>
+    <li><span class="box"></span><span>Manual colour test: par 2 produces clean red, green, blue with no amber/UV/white bleed</span></li>
+    <li><span class="box"></span><span>Blackout test: with RGB all at 0, both pars are completely dark (no macro firing)</span></li>
+    <li><span class="box"></span><span>Pickups positioned at left and right edges of composition</span></li>
+    <li><span class="box"></span><span>Master dimmers per fixture set to desired showtime level</span></li>
+    <li><span class="box"></span><span>Test clip played end-to-end — par colours match visually with projection</span></li>
+    <li><span class="box"></span><span>Wi-Fi disabled (or confirmed routing goes via Ethernet)</span></li>
+    <li><span class="box"></span><span>Walked to back of stage and confirmed light lands on trees as intended</span></li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="glossary">
+  <span class="num">Section 11</span>
+  <h2>Glossary</h2>
+  <p class="section-sub">Quick reference for terms that come up throughout the manual.</p>
+
+  <dl class="glossary">
+    <dt>Address (start address)</dt>
+    <dd>The first DMX channel a fixture listens to. A 3-channel fixture at address 4 listens to channels 4, 5, and 6.</dd>
+
+    <dt>Art-Net</dt>
+    <dd>The most common protocol for sending DMX over Ethernet. Created by Artistic Licence; royalty-free; supported by basically every node manufacturer.</dd>
+
+    <dt>Avenue</dt>
+    <dd>Resolume's lower-tier product. Cannot output DMX. If you have Avenue, this manual doesn't apply — you need Arena.</dd>
+
+    <dt>Broadcast</dt>
+    <dd>A network mode where packets are sent to every device on the subnet at once, rather than one specific IP. Used as a fallback when unicast doesn't work.</dd>
+
+    <dt>Channel mode</dt>
+    <dd>How a fixture interprets the channels it listens to. A 3-channel mode might use R, G, B. A 7-channel mode might use R, G, B, dimmer, strobe, macro, speed.</dd>
+
+    <dt>Daisy chain</dt>
+    <dd>Connecting multiple DMX fixtures in series: node → fixture 1 IN → fixture 1 OUT → fixture 2 IN → terminator. All fixtures share the same DMX signal.</dd>
+
+    <dt>DMX-512</dt>
+    <dd>The serial lighting protocol. One universe = 512 channels of 8-bit data, refreshed ~44 times per second.</dd>
+
+    <dt>Fixture profile</dt>
+    <dd>A definition file (or in-software entry) describing how a fixture's channels map to its functions. Different brands of "RGB par" can need different profiles even though they're functionally identical.</dd>
+
+    <dt>Lumiverse</dt>
+    <dd>Resolume Arena's built-in DMX output system, which samples colours from the composition and converts them into DMX output.</dd>
+
+    <dt>Node (DMX node / Art-Net node)</dt>
+    <dd>The hardware box that converts Ethernet Art-Net or sACN traffic into real DMX signals on XLR cables.</dd>
+
+    <dt>Pickup (pickup point)</dt>
+    <dd>A position on the composition canvas where a Lumiverse fixture reads its colour from. Draggable; can be resized to sample over a larger area.</dd>
+
+    <dt>sACN (E1.31)</dt>
+    <dd>An alternative protocol to Art-Net for carrying DMX over Ethernet. More modern, slightly more network-friendly. Supported by some nodes; usually interchangeable with Art-Net in practice.</dd>
+
+    <dt>Subnet</dt>
+    <dd>A range of IP addresses that share the same network. Devices on the same subnet can talk directly; devices on different subnets need a router. For Art-Net, computer and node must be on the same subnet.</dd>
+
+    <dt>Terminator</dt>
+    <dd>A 120-ohm resistor in an XLR-shaped plug, placed at the end of a DMX chain to absorb signal reflections.</dd>
+
+    <dt>Unicast</dt>
+    <dd>A network mode where packets are sent to one specific IP address. The cleanest way to send Art-Net to a known node.</dd>
+
+    <dt>Universe</dt>
+    <dd>A single DMX-512 channel group of 512 channels. One universe = one DMX line. Larger rigs use multiple universes; you only need one for two pars.</dd>
+  </dl>
+</section>
+
+<footer>
+  END OF FIELD MANUAL · OFFLINE-SAFE · SINGLE FILE · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+</div>
+
+<script>
+  // Checklist toggle — in-memory only
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    li.addEventListener('click', function() {
+      li.classList.toggle('done');
+    });
+  });
+
+  // Search / filter / highlight
+  var search = document.getElementById('search');
+  var sections = document.querySelectorAll('main section');
+  var originalHTML = new Map();
+  sections.forEach(function(s) { originalHTML.set(s, s.innerHTML); });
+
+  search.addEventListener('input', function() {
+    var q = search.value.trim().toLowerCase();
+    sections.forEach(function(s) {
+      var original = originalHTML.get(s);
+      if (!q) {
+        s.innerHTML = original;
+        s.style.display = '';
+        return;
+      }
+      // Restore original first
+      s.innerHTML = original;
+      var text = s.textContent.toLowerCase();
+      if (text.indexOf(q) === -1) {
+        s.style.display = 'none';
+      } else {
+        s.style.display = '';
+        // Highlight matches in text nodes only (skip <script>, <style>, attributes)
+        highlightInNode(s, q);
+      }
+    });
+    // Re-bind checklist clicks after innerHTML rewrite
+    document.querySelectorAll('.checklist li').forEach(function(li) {
+      li.addEventListener('click', function() { li.classList.toggle('done'); });
+    });
+  });
+
+  function highlightInNode(node, q) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n) {
+        if (!n.parentNode) return NodeFilter.FILTER_REJECT;
+        var tag = n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var toReplace = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (n.nodeValue.toLowerCase().indexOf(q) !== -1) toReplace.push(n);
+    }
+    toReplace.forEach(function(n) {
+      var parts = n.nodeValue.split(new RegExp('(' + escapeRegex(q) + ')', 'gi'));
+      var frag = document.createDocumentFragment();
+      parts.forEach(function(p) {
+        if (p.toLowerCase() === q) {
+          var span = document.createElement('span');
+          span.className = 'search-hit';
+          span.textContent = p;
+          frag.appendChild(span);
+        } else {
+          frag.appendChild(document.createTextNode(p));
+        }
+      });
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+</script>
+
+</body>
+</html>

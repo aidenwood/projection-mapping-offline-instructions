@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NDI Bridge: Mac TouchDesigner ↔ Windows Resolume — Field Manual</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--serif); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { display: flex; min-height: 100vh; }
+  nav.toc { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { flex: 1; max-width: 820px; padding: 48px 56px 120px; }
+  @media (max-width: 900px) { .wrap { flex-direction: column; } nav.toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); } main { padding: 32px 22px 80px; } }
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 40px; }
+  .masthead .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .masthead h1 { font-family: var(--mono); font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .masthead .lede { color: var(--muted); font-style: italic; max-width: 60ch; margin: 0; }
+  .toc-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocstep; }
+  .toc li { margin-bottom: 6px; counter-increment: tocstep; }
+  .toc a { color: var(--text); text-decoration: none; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; display: block; padding: 6px 0 6px 32px; position: relative; border-left: 1px solid transparent; transition: all 0.15s ease; }
+  .toc a::before { content: counter(tocstep, decimal-leading-zero); position: absolute; left: 0; color: var(--muted); font-size: 10px; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); padding-left: 36px; }
+  .toc-back { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+  .toc-back:hover { color: var(--accent); }
+  .search-box { width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; margin-bottom: 22px; border-radius: 2px; }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-hit { background: rgba(255, 181, 71, 0.25); padding: 1px 2px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  section .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px; }
+  section h2 { font-family: var(--mono); font-weight: 600; font-size: 22px; margin: 0 0 8px; line-height: 1.2; }
+  section .section-sub { color: var(--muted); font-style: italic; margin: 0 0 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); }
+  h3 { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 32px 0 12px; }
+  h4 { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+  p { margin: 0 0 14px; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); padding: 1px 6px; border-radius: 2px; color: var(--accent); }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: stepc; }
+  ol.steps > li { counter-increment: stepc; padding: 18px 0 18px 56px; border-bottom: 1px solid var(--border); position: relative; }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before { content: counter(stepc, decimal-leading-zero); position: absolute; left: 0; top: 18px; font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; background: var(--surface-2); padding: 4px 8px; border: 1px solid var(--border); }
+  ol.steps > li p:last-child { margin-bottom: 0; }
+  .callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 14px 18px; margin: 18px 0; font-size: 14.5px; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.info { border-left-color: var(--info); }
+  .callout .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 6px; }
+  .callout.warn .label { color: var(--warn); }
+  .callout.ok .label { color: var(--ok); }
+  .callout.info .label { color: var(--info); }
+  .callout p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: var(--mono); font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; background: var(--surface); }
+  tr:hover td { background: var(--surface); }
+  .diagram { background: var(--surface); border: 1px solid var(--border); padding: 24px; margin: 22px 0; overflow-x: auto; }
+  .diagram pre { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--text); margin: 0; white-space: pre; }
+  .diagram .caption { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+  .ts { background: var(--surface); border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; }
+  .ts summary { cursor: pointer; padding: 14px 18px; font-family: var(--mono); font-size: 13px; list-style: none; color: var(--warn); font-weight: 600; user-select: none; position: relative; padding-right: 40px; }
+  .ts summary::-webkit-details-marker { display: none; }
+  .ts summary::after { content: "+"; position: absolute; right: 18px; top: 12px; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+  .ts[open] summary::after { content: "−"; }
+  .ts .body { padding: 4px 18px 18px; border-top: 1px solid var(--border); }
+  .ts .body p:first-child { margin-top: 12px; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--surface); display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.15s; font-size: 14.5px; }
+  .checklist li:hover { border-color: var(--accent-dim); }
+  .checklist li.done { opacity: 0.45; text-decoration: line-through; }
+  .checklist .box { width: 14px; height: 14px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 4px; position: relative; }
+  .checklist li.done .box { background: var(--ok); border-color: var(--ok); }
+  .checklist li.done .box::after { content: "✓"; position: absolute; color: var(--bg); font-size: 12px; top: -3px; left: 1px; font-weight: bold; }
+  dl.glossary { margin: 0; }
+  dl.glossary dt { font-family: var(--mono); color: var(--accent); font-size: 13px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  dl.glossary dd { margin: 4px 0 0; padding-left: 0; }
+  footer { border-top: 1px solid var(--border); margin-top: 80px; padding-top: 22px; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; }
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <a class="toc-back" href="manuals_index.html">&larr; Manual index</a>
+  <div class="toc-title">Field Manual</div>
+  <input type="text" id="search" class="search-box" placeholder="Search the manual..." />
+  <ol class="toc">
+    <li><a href="#overview">Why NDI, not Syphon</a></li>
+    <li><a href="#concepts">Core concepts</a></li>
+    <li><a href="#network">Network setup</a></li>
+    <li><a href="#mac-send">Mac: TouchDesigner sending NDI</a></li>
+    <li><a href="#win-receive">Windows: Resolume receiving NDI</a></li>
+    <li><a href="#win-send">Windows: Resolume sending NDI back</a></li>
+    <li><a href="#mac-receive">Mac: TouchDesigner receiving NDI</a></li>
+    <li><a href="#keystone">Keystone from TouchDesigner</a></li>
+    <li><a href="#performance">Performance &amp; latency</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Pre-show checklist</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual · Volume II</div>
+  <h1>NDI Bridge — Mac TouchDesigner ↔ Windows Resolume</h1>
+  <p class="lede">Sending visuals one way or both ways between a Mac running TouchDesigner and a Windows machine running Resolume Arena, over a single Ethernet cable, with no internet, with low enough latency that you can keystone visuals on the Mac and still trigger them from the Windows side.</p>
+</header>
+
+<section id="overview">
+  <span class="num">Section 01</span>
+  <h2>Why NDI, not Syphon</h2>
+  <p class="section-sub">Three protocols, only one of them crosses operating systems.</p>
+
+  <p>There are three common ways to pass video frames between apps in live visuals:</p>
+
+  <table>
+    <thead><tr><th>Protocol</th><th>Where it lives</th><th>Cross-machine?</th><th>Cross-platform?</th></tr></thead>
+    <tbody>
+      <tr><td>Syphon</td><td>Mac, between apps on the same Mac</td><td>No</td><td>No (Mac only)</td></tr>
+      <tr><td>Spout</td><td>Windows, between apps on the same Windows machine</td><td>No</td><td>No (Windows only)</td></tr>
+      <tr><td>NDI</td><td>Anywhere on the same network</td><td>Yes</td><td>Yes (Mac, Windows, Linux)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Syphon and Spout move frames through shared GPU memory on a single machine — extremely low latency, zero network overhead, but locked to one OS and one box. NDI moves frames over Ethernet — slightly more latency, real network cost, but it doesn't care which side runs what.</p>
+
+  <p>For sending visuals between your Mac and your Windows machine, NDI is the only option that works natively. There are paid bridges (Spout-to-NDI, Syphon-to-NDI) but they're just NDI under the hood. Skip them.</p>
+
+  <div class="callout info">
+    <span class="label">Same machine still uses native protocols</span>
+    <p>If you ever want to pipe TouchDesigner to another Mac app (or Resolume to another Windows app), use Syphon or Spout respectively — they're faster than NDI on a single machine. NDI is for the cross-machine link.</p>
+  </div>
+</section>
+
+<section id="concepts">
+  <span class="num">Section 02</span>
+  <h2>Core concepts</h2>
+  <p class="section-sub">Five minutes of theory before you start clicking.</p>
+
+  <h4>Sender and receiver</h4>
+  <p>NDI is a two-side protocol. A <strong>sender</strong> announces itself on the network and pushes frames out. A <strong>receiver</strong> discovers senders and pulls their frames in. Any app can be a sender, a receiver, or both at the same time on different streams.</p>
+
+  <h4>Discovery</h4>
+  <p>NDI uses mDNS (Bonjour) for automatic discovery — senders advertise themselves, receivers see them appear in a list without any manual IP configuration. This works beautifully when both machines are on the same subnet, and not at all when they aren't. The "is NDI discovery working" question is really "is mDNS working on this network."</p>
+
+  <h4>Bandwidth</h4>
+  <p>NDI's default mode is high-quality (around 100–150 Mbit/sec for 1080p60). Run it on gigabit Ethernet. NDI HX is a lower-bandwidth variant (around 8–20 Mbit/sec) intended for Wi-Fi and remote work — you don't need it for a wired stage setup.</p>
+
+  <h4>Latency</h4>
+  <p>Expect 1–3 frames of latency end-to-end on a clean wired link. At 60 fps that's 17–50 ms, fine for visuals. It's enough that you'd notice if NDI were in a camera-to-monitor loop for a presenter, but for music-driven visuals it's invisible.</p>
+
+  <h4>NDI Tools</h4>
+  <p>NewTek (now part of Vizrt) ships a free suite called <strong>NDI Tools</strong> for both Mac and Windows. The essentials in there are:</p>
+  <ul>
+    <li><code>NDI Studio Monitor</code> — a viewer that shows any NDI source on the network. The fastest way to verify a stream exists before involving any creative software.</li>
+    <li><code>NDI Test Patterns</code> — generates a known-good NDI source. Use this to isolate "is the network working" from "is TouchDesigner working."</li>
+    <li><code>NDI Access Manager</code> — lets you scope discovery to specific groups so dozens of NDI sources don't pollute a venue's network. Usually unnecessary for a single-show setup.</li>
+  </ul>
+  <p>Install NDI Tools on both machines before you leave the studio. Caveman simple: if Studio Monitor on Windows can see a Test Pattern from the Mac, your network is fine and any creative-software issue is in the creative software.</p>
+</section>
+
+<section id="network">
+  <span class="num">Section 03</span>
+  <h2>Network setup</h2>
+  <p class="section-sub">Same subnet, wired, Wi-Fi off, nothing fancy.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Direct cable, or both on a switch.</strong> The two reliable topologies are: Mac and Windows both plugged into the same gigabit switch (recommended, frees a port for the DMX node), or one Cat6 cable directly between the two machines (works fine if the rest of the rig doesn't need the network). Avoid Wi-Fi entirely.</p>
+    </li>
+    <li>
+      <p><strong>Set static IPs on both Ethernet interfaces.</strong> Pick a small private subnet that doesn't conflict with anything else in the rig. A common choice: Windows on <code>10.0.0.10</code>, Mac on <code>10.0.0.11</code>, DMX node on <code>10.0.0.20</code>, all with subnet mask <code>255.255.255.0</code> and no gateway.</p>
+      <p>On macOS: <code>System Settings → Network → Ethernet → Details → TCP/IP → Configure IPv4: Manually</code>.</p>
+      <p>On Windows: <code>Settings → Network → Ethernet → Edit IP assignment → Manual → IPv4 on</code>.</p>
+    </li>
+    <li>
+      <p><strong>Disable Wi-Fi on both machines.</strong> This is the single biggest cause of NDI discovery failing. macOS and Windows both have a habit of treating Wi-Fi as the "default" network interface, so NDI announces and listens on Wi-Fi while your actual data is going over Ethernet. Disable Wi-Fi entirely or, on macOS, drag Ethernet above Wi-Fi in <code>Network → Service Order</code>.</p>
+    </li>
+    <li>
+      <p><strong>Disable any VPNs, firewalls, or "antivirus network shields."</strong> They block mDNS and NDI's discovery ports. macOS firewall: <code>System Settings → Network → Firewall → Off</code> (or allow incoming for TouchDesigner and NDI Tools specifically). Windows Defender firewall: same drill — turn off for the private network profile, or whitelist Resolume and NDI Tools.</p>
+    </li>
+    <li>
+      <p><strong>Test the network with ping.</strong> From Mac terminal: <code>ping 10.0.0.10</code>. From Windows command prompt: <code>ping 10.0.0.11</code>. Both should reply. If either doesn't, fix the network before opening any creative software — you'll just chase ghost bugs otherwise.</p>
+    </li>
+    <li>
+      <p><strong>Verify NDI discovery with NDI Tools.</strong> On the Mac, open <code>NDI Test Patterns</code> and let it run. On Windows, open <code>NDI Studio Monitor</code> — the Mac's test pattern source should appear in the right-click source list within 5 seconds. If it does, your network is healthy. If not, see the troubleshooting section.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">NDI Access Manager groups</span>
+    <p>If you've ever set non-default NDI groups in Access Manager and forgotten about it, sources won't appear across machines whose groups don't match. Open NDI Access Manager on both machines and confirm both are sending and receiving on the same group (default is just <code>public</code>).</p>
+  </div>
+</section>
+
+<section id="mac-send">
+  <span class="num">Section 04</span>
+  <h2>Mac: TouchDesigner sending NDI</h2>
+  <p class="section-sub">Putting your generative content onto the network.</p>
+
+  <p>TouchDesigner has built-in NDI output. There are two ways to expose a stream:</p>
+
+  <h4>Method A — Touch Out TOP</h4>
+  <p>The simplest way. Drop a <code>TouchOut TOP</code> on your network, set its <strong>Output Type</strong> parameter to <code>NDI</code>, connect the TOP you want to send into its input. Give the stream a clear name in the <strong>Name</strong> parameter (e.g. <code>TD_Main</code>) — this is what shows up on the Windows side.</p>
+
+  <h4>Method B — NDI Out TOP</h4>
+  <p>TouchDesigner also has a dedicated <code>NDI Out TOP</code>. Functionally identical to <code>TouchOut TOP</code> in NDI mode for most purposes; some builds give you a few extra options like alpha channel control. Pick whichever your version of TD has.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Open your TouchDesigner project.</strong> Find or build the chain of TOPs that produces your final composited content. Whatever feeds your local preview is what should feed the NDI sender.</p>
+    </li>
+    <li>
+      <p><strong>Drop a <code>Touch Out TOP</code> at the end of that chain.</strong> Wire your final TOP into its input. The TOP itself doesn't render anywhere visible on the Mac — it's just the network exit point.</p>
+    </li>
+    <li>
+      <p><strong>Set <code>Output Type</code> to <code>NDI</code>.</strong> The TOP's parameter window has an Output Type dropdown. Pick NDI.</p>
+    </li>
+    <li>
+      <p><strong>Name the stream sensibly.</strong> Set <code>Name</code> to something descriptive like <code>TD_PBR</code> or <code>TD_Particles</code>. NDI streams are advertised as <em>MachineName (StreamName)</em>, e.g. <code>STUDIO-MAC (TD_PBR)</code>. Avoid spaces and punctuation.</p>
+    </li>
+    <li>
+      <p><strong>Set the output resolution.</strong> Match it to what Resolume expects on the receiving side — usually your composition resolution. 1080p is a safe default. 4K will work on gigabit but eats bandwidth and CPU.</p>
+    </li>
+    <li>
+      <p><strong>Verify on the Mac side first.</strong> Open <code>NDI Studio Monitor</code> on the Mac itself, right-click, find <em>(your machine name) → TD_PBR</em>, click it. If you see your output here, the sender is healthy.</p>
+    </li>
+    <li>
+      <p><strong>Now check on Windows.</strong> Open NDI Studio Monitor on Windows. The Mac source should appear in the right-click list. If it does, the link is alive end-to-end.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Multiple streams from one Mac</span>
+    <p>You can have several <code>Touch Out TOP</code>s in the same project, each with a different name. Resolume will see each one as a separate NDI source and you can place them on different layers. Useful if you want a PBR overlay on one layer and a particle layer on another.</p>
+  </div>
+</section>
+
+<section id="win-receive">
+  <span class="num">Section 05</span>
+  <h2>Windows: Resolume receiving NDI</h2>
+  <p class="section-sub">Pulling the Mac's stream into the composition as a layer.</p>
+
+  <p>Resolume Arena treats NDI sources like any other clip. They live in the <strong>Sources</strong> panel under the NDI category. Drag them onto a layer like a video file.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Confirm NDI is enabled in Resolume preferences.</strong> <code>Preferences → Sources → NDI</code>. There's a toggle. It should be on by default; confirm it is.</p>
+    </li>
+    <li>
+      <p><strong>Open the Sources panel.</strong> Bottom-left of the Resolume UI by default, alongside Files, Effects, etc. Click <strong>Sources</strong>, then expand the <strong>NDI</strong> section. Any NDI sources on the network should be listed here, named by <em>machine (stream)</em>.</p>
+    </li>
+    <li>
+      <p><strong>Drag the Mac's NDI source onto an empty clip slot.</strong> Resolume creates a clip that plays the stream live. You can drag this clip to any layer like any other clip. Hit the clip to make it live, and you should see the Mac's output appear in your composition preview.</p>
+    </li>
+    <li>
+      <p><strong>Set the clip's transform to match your needs.</strong> The NDI feed comes in at whatever resolution the Mac sent. If your composition is 1920×1080 and the Mac sends 1920×1080, no scaling is needed. If they differ, use the clip's transform parameters or a Transform effect to fit.</p>
+    </li>
+    <li>
+      <p><strong>Layer-blend the NDI stream over your existing composition.</strong> Put the NDI clip on a layer above your projection-mapped content, set the blend mode (Add, Screen, Overlay) to taste, and dial the opacity. This is how you get the PBR overlay sitting on top of your base visuals — the next manual covers the specifics of what to put inside the NDI stream.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">NDI source disappears mid-show</span>
+    <p>If the Mac's stream drops, the clip slot in Resolume shows black. Add a fallback clip on a lower layer or set the layer's autofade to kick in if the NDI source disconnects. Don't trust NDI alone for a hero moment — always have a baked video fallback for the same beat.</p>
+  </div>
+</section>
+
+<section id="win-send">
+  <span class="num">Section 06</span>
+  <h2>Windows: Resolume sending NDI back to the Mac</h2>
+  <p class="section-sub">Closing the loop so the Mac can react to what Resolume is rendering.</p>
+
+  <p>If you want the Mac to know what Resolume is currently rendering — say, so TouchDesigner can render a PBR overlay that responds to the base composition's brightness, or so you can keystone the final mapped output from TD — you need Resolume to send NDI in the other direction.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Enable Resolume's NDI output.</strong> <code>Output → NDI</code> from the menu bar. Resolume immediately starts broadcasting the master composition as an NDI source named after the Windows machine and "Resolume Arena" or similar.</p>
+    </li>
+    <li>
+      <p><strong>Verify on Windows first.</strong> Open NDI Studio Monitor on Windows itself and confirm the local stream appears. If it does, Resolume is broadcasting correctly.</p>
+    </li>
+    <li>
+      <p><strong>Verify on the Mac.</strong> Open NDI Studio Monitor on the Mac, right-click, find the Windows machine's Resolume stream. You should see live video.</p>
+    </li>
+    <li>
+      <p><strong>Receive into TouchDesigner.</strong> Drop an <code>NDI In TOP</code> on your TD network. In its <strong>Source Name</strong> dropdown, pick the Resolume stream from the list. Wire the TOP into wherever you want it — a feedback chain, a colour analysis network, a keystone op.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Per-layer vs master NDI</span>
+    <p>Resolume's main <code>Output → NDI</code> sends the final master composition. If you want only one layer's output, you can place a <strong>Direct Output</strong> on a layer and route it to NDI individually. Useful if you want to send a pre-FX clean feed back to the Mac for analysis.</p>
+  </div>
+</section>
+
+<section id="mac-receive">
+  <span class="num">Section 07</span>
+  <h2>Mac: TouchDesigner receiving NDI</h2>
+  <p class="section-sub">Reading any NDI source into TD as a TOP.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Drop an <code>NDI In TOP</code> on the network.</strong> Single op, no input wires needed.</p>
+    </li>
+    <li>
+      <p><strong>Click the <code>Source Name</code> parameter dropdown.</strong> TD will list every NDI source it can see on the network. Pick the Windows/Resolume stream.</p>
+    </li>
+    <li>
+      <p><strong>Set the resolution mode.</strong> The default is to inherit from the source — leave it there unless you have a specific reason to resample. Resampling on the TOP adds a frame of latency.</p>
+    </li>
+    <li>
+      <p><strong>Wire it into your TD network as input to whatever you want to do with it.</strong> Common uses: feedback effects that react to Resolume's output, colour sampling for matching PBR lighting to the composition's palette, geometry-projection effects that use Resolume's content as a texture on a 3D scene.</p>
+    </li>
+  </ol>
+</section>
+
+<section id="keystone">
+  <span class="num">Section 08</span>
+  <h2>Keystone from TouchDesigner</h2>
+  <p class="section-sub">Using TD as the final mapping surface, with Resolume feeding it.</p>
+
+  <p>You mentioned you can keystone from TouchDesigner easily — if you want TD to be the projection-mapping surface rather than Resolume's Advanced Output, the flow is:</p>
+
+  <div class="diagram">
+    <div class="caption">Inverted topology: TD does the mapping</div>
+<pre>
+   [Resolume Arena] ──NDI──→ [TouchDesigner: NDI In TOP]
+   (Windows)                       │
+                                   │ wired into a Render TOP
+                                   │ with a textured plane
+                                   ↓
+                            [Cornerpin TOP / SOP keystone]
+                                   │
+                                   ↓
+                          [TouchOut TOP → projector HDMI]
+                          (Mac drives the projector)
+</pre>
+  </div>
+
+  <p>This swaps which machine owns the projector. The Mac plugs into the projector via HDMI, runs full-screen TouchDesigner output, and reads its content from Resolume over NDI. Reasons to do this: TD's cornerpin and 3D-projection operators are more flexible than Resolume's Advanced Output for unusual surfaces; you can apply per-corner softening, mesh-based warping, or full 3D camera-projection mapping using the live NDI stream as the texture.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Decide which machine owns the projector.</strong> If TD is going to handle keystone, the projector plugs into the Mac. Resolume still runs on Windows but only outputs to NDI — it doesn't drive a physical display.</p>
+    </li>
+    <li>
+      <p><strong>In Resolume, disable Advanced Output if you don't need it locally.</strong> Send the master composition out NDI as in Section 06. Resolume's job is now "be a media server feeding TD."</p>
+    </li>
+    <li>
+      <p><strong>In TD, receive Resolume's NDI into a Cornerpin TOP or Camera Projection setup.</strong> A simple cornerpin: <code>NDI In TOP → Cornerpin TOP</code>. Drag the four output corners to align with your surface. For complex 3D mapping, use a <code>Geometry COMP</code> with the NDI feed as the material texture, then render the camera view.</p>
+    </li>
+    <li>
+      <p><strong>Output the warped result to the projector.</strong> Send TD's final TOP to a <code>Window COMP</code> set to perform mode on the projector display. <code>Dialogs → Window Placement</code> or right-click the Window COMP. Set to perform mode, full screen, on the projector's display index.</p>
+    </li>
+    <li>
+      <p><strong>Verify the round-trip.</strong> Trigger a clip in Resolume — it should appear on the projector via TD, with TD's keystone applied. Latency is two NDI hops if you also send TD back to Resolume for any reason; one NDI hop if it's a one-way flow.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <span class="label">Hybrid: keep both mapping surfaces alive</span>
+    <p>You don't have to pick one. Resolume can map most of the stage via Advanced Output (driving its own HDMI to projector A) while TD maps a separate sculpture or surface via NDI (driving its HDMI to projector B). For a two-projector show that needs different mapping qualities, this is the way.</p>
+  </div>
+</section>
+
+<section id="performance">
+  <span class="num">Section 09</span>
+  <h2>Performance &amp; latency</h2>
+  <p class="section-sub">What to expect, what to tune if it's not enough.</p>
+
+  <h4>Bandwidth budget</h4>
+  <p>One 1080p60 NDI stream burns roughly 125 Mbit/sec. Two simultaneous streams in opposite directions on a gigabit switch is still comfortably within the 1000 Mbit budget. Four streams will start to stress a cheap switch; eight will need a managed gigabit switch with proper buffering.</p>
+
+  <h4>CPU cost</h4>
+  <p>NDI encoding and decoding both run on CPU. On both Mac and Windows, expect 10–20% CPU usage per 1080p60 stream. If you're seeing higher than that, check whether the source resolution is higher than you think (NDI doesn't auto-downscale).</p>
+
+  <h4>Frame rate matching</h4>
+  <p>Run sender and receiver at the same frame rate. If TD is rendering at 60 fps and Resolume's composition is at 30 fps, Resolume drops every other NDI frame. Match composition and TD project framerate before showtime.</p>
+
+  <h4>Reducing latency</h4>
+  <ul>
+    <li>Use a dedicated gigabit switch with no other traffic on it.</li>
+    <li>Disable any "energy efficient Ethernet" power-saving features on both NICs — they introduce variable latency.</li>
+    <li>Disable Windows' GPU scheduling toggle if you're on an older driver — it can add 1–2 frames of input latency to NDI-receive.</li>
+    <li>If you don't need alpha, don't send alpha — fewer bytes per frame.</li>
+  </ul>
+</section>
+
+<section id="troubleshoot">
+  <span class="num">Section 10</span>
+  <h2>Troubleshooting</h2>
+  <p class="section-sub">When the green link light is on but nothing shows up.</p>
+
+  <details class="ts">
+    <summary>NDI source from the Mac doesn't appear on Windows at all</summary>
+    <div class="body">
+      <p>This is almost always one of three things, in order of likelihood:</p>
+      <p>(1) <strong>Wi-Fi is still on.</strong> NDI is announcing on Wi-Fi (or expecting to hear announcements there) instead of Ethernet. Turn Wi-Fi off entirely on both machines.</p>
+      <p>(2) <strong>Firewall blocking mDNS.</strong> macOS firewall blocks incoming on TouchDesigner. Windows Defender blocks Resolume. Turn off the firewall for the private network profile, or explicitly allow the apps.</p>
+      <p>(3) <strong>Different subnets.</strong> Ping each from the other. If ping fails, fix IPs before doing anything else.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Stream appears but is black, or shows last frame frozen</summary>
+    <div class="body">
+      <p>The sender registered itself but isn't actually producing frames. On TouchDesigner: confirm the input to your <code>Touch Out TOP</code> is actually rendering — wire a Constant TOP into it as a test, you should see solid colour. On Resolume: confirm the master composition has content. Frozen-last-frame usually means the sender stopped rendering but didn't disconnect the stream.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Stream flickers, tears, or shows blocky compression</summary>
+    <div class="body">
+      <p>Bandwidth issue. Either: the switch is overloaded (try a direct cable), the cable is bad (swap it for a tested one), or you're on a 100 Mbit link not gigabit (check the link speed in network settings on both machines). Cat5e is fine for gigabit; Cat5 (without the e) is not.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>NDI works, then drops after a few minutes</summary>
+    <div class="body">
+      <p>Two common causes: (1) a thermal-throttled NIC dropping connection — let the machines warm up before the show and check none of them are running hot in a confined road case. (2) Network sleep/power-saving — disable energy-efficient Ethernet and "allow this device to be turned off to save power" on Windows NICs.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Latency is too high — visuals lag behind clip triggers</summary>
+    <div class="body">
+      <p>Expect 1–3 frames. If you're seeing more than that, check: framerate mismatch between sender and receiver (the bigger gap will be visible as judder, not pure latency), NDI HX mode accidentally enabled somewhere (it adds buffering), Resolume's <code>Preferences → Sources → Buffer Frames</code> set high (lower it to 1).</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Multiple NDI sources confuse the receiver</summary>
+    <div class="body">
+      <p>If you have several test streams running from old sessions, they'll all advertise on the network. Quit anything you don't need. Worst case, open NDI Access Manager and put your show machines in a custom group so unrelated sources are filtered out.</p>
+    </div>
+  </details>
+</section>
+
+<section id="checklist">
+  <span class="num">Section 11</span>
+  <h2>Pre-show checklist</h2>
+  <p class="section-sub">Tick before you trust the bridge.</p>
+
+  <ul class="checklist">
+    <li><div class="box"></div><div>NDI Tools installed on both Mac and Windows.</div></li>
+    <li><div class="box"></div><div>Static IPs set on both Ethernet interfaces; subnets match.</div></li>
+    <li><div class="box"></div><div>Wi-Fi disabled on both machines.</div></li>
+    <li><div class="box"></div><div>Firewalls disabled or apps whitelisted on both machines.</div></li>
+    <li><div class="box"></div><div>Ping succeeds in both directions.</div></li>
+    <li><div class="box"></div><div>NDI Studio Monitor on Windows sees a test pattern from the Mac.</div></li>
+    <li><div class="box"></div><div>NDI Studio Monitor on Mac sees Resolume's NDI output from Windows.</div></li>
+    <li><div class="box"></div><div>TouchOut TOP in TD named clearly; resolution matches Resolume's composition.</div></li>
+    <li><div class="box"></div><div>Resolume's NDI Source panel shows the Mac stream and it plays as a clip.</div></li>
+    <li><div class="box"></div><div>Composition framerate matches TD project framerate.</div></li>
+    <li><div class="box"></div><div>Backup baked video file ready on Resolume in case NDI drops.</div></li>
+    <li><div class="box"></div><div>Switch link lights all solid; cables physically secured/taped.</div></li>
+  </ul>
+</section>
+
+<section id="glossary">
+  <span class="num">Section 12</span>
+  <h2>Glossary</h2>
+
+  <dl class="glossary">
+    <dt>Bonjour / mDNS</dt>
+    <dd>Multicast DNS, Apple's zero-configuration service-discovery protocol. NDI uses it to find sources on the network. Implemented natively on macOS; Windows machines need Bonjour Print Services or the bundled NDI Tools installer for it to work reliably.</dd>
+
+    <dt>NDI</dt>
+    <dd>Network Device Interface. NewTek/Vizrt's protocol for sending uncompressed-quality video over Ethernet. Cross-platform.</dd>
+
+    <dt>NDI HX</dt>
+    <dd>A lower-bandwidth, slightly higher-latency NDI variant intended for Wi-Fi and remote workflows. Avoid for stage use.</dd>
+
+    <dt>Spout</dt>
+    <dd>Windows-only protocol for passing video between apps on the same machine via shared GPU memory.</dd>
+
+    <dt>Syphon</dt>
+    <dd>Mac-only equivalent of Spout. Doesn't cross machines.</dd>
+
+    <dt>TOP</dt>
+    <dd>Texture Operator. TouchDesigner's 2D image-processing operator family. NDI In TOP and Touch Out TOP are the two endpoints.</dd>
+  </dl>
+</section>
+
+<footer>
+  END OF FIELD MANUAL · OFFLINE-SAFE · SINGLE FILE · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+</div>
+
+<script>
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    li.addEventListener('click', function() { li.classList.toggle('done'); });
+  });
+
+  var search = document.getElementById('search');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section'));
+  var originalClones = new Map();
+  sections.forEach(function(s) { originalClones.set(s, s.cloneNode(true)); });
+
+  function restoreSection(s) {
+    var clone = originalClones.get(s).cloneNode(true);
+    s.replaceWith(clone);
+    var idx = sections.indexOf(s);
+    if (idx !== -1) sections[idx] = clone;
+    return clone;
+  }
+
+  function highlightInNode(node, q) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n) {
+        if (!n.parentNode) return NodeFilter.FILTER_REJECT;
+        var tag = n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var toReplace = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (n.nodeValue.toLowerCase().indexOf(q) !== -1) toReplace.push(n);
+    }
+    toReplace.forEach(function(n) {
+      var src = n.nodeValue;
+      var lower = src.toLowerCase();
+      var frag = document.createDocumentFragment();
+      var i = 0;
+      while (i < src.length) {
+        var hit = lower.indexOf(q, i);
+        if (hit === -1) {
+          frag.appendChild(document.createTextNode(src.slice(i)));
+          break;
+        }
+        if (hit > i) frag.appendChild(document.createTextNode(src.slice(i, hit)));
+        var span = document.createElement('span');
+        span.className = 'search-hit';
+        span.textContent = src.slice(hit, hit + q.length);
+        frag.appendChild(span);
+        i = hit + q.length;
+      }
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  search.addEventListener('input', function() {
+    var q = search.value.trim().toLowerCase();
+    sections.slice().forEach(function(s) {
+      var fresh = restoreSection(s);
+      if (!q) { fresh.style.display = ''; return; }
+      var text = fresh.textContent.toLowerCase();
+      if (text.indexOf(q) === -1) { fresh.style.display = 'none'; }
+      else { fresh.style.display = ''; highlightInNode(fresh, q); }
+    });
+    document.querySelectorAll('.checklist li').forEach(function(li) {
+      li.addEventListener('click', function() { li.classList.toggle('done'); });
+    });
+  });
+</script>
+
+</body>
+</html>

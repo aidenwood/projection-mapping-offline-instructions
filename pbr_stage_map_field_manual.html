@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBR Stage Map + Moving Lights Overlay — Field Manual</title>
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --surface-2: #222222;
+    --border: #2e2e2e;
+    --text: #e8e6e0;
+    --muted: #8a8780;
+    --accent: #ffb547;
+    --accent-dim: #c98a2e;
+    --warn: #ff5a4d;
+    --ok: #6dd49e;
+    --info: #7ab8d6;
+    --mono: ui-monospace, "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--serif); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { display: flex; min-height: 100vh; }
+  nav.toc { width: 280px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { flex: 1; max-width: 820px; padding: 48px 56px 120px; }
+  @media (max-width: 900px) { .wrap { flex-direction: column; } nav.toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); } main { padding: 32px 22px 80px; } }
+  .masthead { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 40px; }
+  .masthead .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .masthead h1 { font-family: var(--mono); font-weight: 600; font-size: 30px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .masthead .lede { color: var(--muted); font-style: italic; max-width: 60ch; margin: 0; }
+  .toc-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: tocstep; }
+  .toc li { margin-bottom: 6px; counter-increment: tocstep; }
+  .toc a { color: var(--text); text-decoration: none; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; display: block; padding: 6px 0 6px 32px; position: relative; border-left: 1px solid transparent; transition: all 0.15s ease; }
+  .toc a::before { content: counter(tocstep, decimal-leading-zero); position: absolute; left: 0; color: var(--muted); font-size: 10px; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); padding-left: 36px; }
+  .toc-back { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+  .toc-back:hover { color: var(--accent); }
+  .search-box { width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; margin-bottom: 22px; border-radius: 2px; }
+  .search-box:focus { outline: none; border-color: var(--accent); }
+  .search-hit { background: rgba(255, 181, 71, 0.25); padding: 1px 2px; }
+  section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  section .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px; }
+  section h2 { font-family: var(--mono); font-weight: 600; font-size: 22px; margin: 0 0 8px; line-height: 1.2; }
+  section .section-sub { color: var(--muted); font-style: italic; margin: 0 0 28px; padding-bottom: 20px; border-bottom: 1px dashed var(--border); }
+  h3 { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 32px 0 12px; }
+  h4 { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); margin: 24px 0 8px; }
+  p { margin: 0 0 14px; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; background: var(--surface-2); padding: 1px 6px; border-radius: 2px; color: var(--accent); }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: stepc; }
+  ol.steps > li { counter-increment: stepc; padding: 18px 0 18px 56px; border-bottom: 1px solid var(--border); position: relative; }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before { content: counter(stepc, decimal-leading-zero); position: absolute; left: 0; top: 18px; font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.1em; background: var(--surface-2); padding: 4px 8px; border: 1px solid var(--border); }
+  ol.steps > li p:last-child { margin-bottom: 0; }
+  .callout { border-left: 3px solid var(--accent); background: var(--surface); padding: 14px 18px; margin: 18px 0; font-size: 14.5px; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout.info { border-left-color: var(--info); }
+  .callout .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 6px; }
+  .callout.warn .label { color: var(--warn); }
+  .callout.ok .label { color: var(--ok); }
+  .callout.info .label { color: var(--info); }
+  .callout p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: var(--mono); font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; background: var(--surface); }
+  tr:hover td { background: var(--surface); }
+  .diagram { background: var(--surface); border: 1px solid var(--border); padding: 24px; margin: 22px 0; overflow-x: auto; }
+  .diagram pre { font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--text); margin: 0; white-space: pre; }
+  .diagram .caption { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+  .ts { background: var(--surface); border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; }
+  .ts summary { cursor: pointer; padding: 14px 18px; font-family: var(--mono); font-size: 13px; list-style: none; color: var(--warn); font-weight: 600; user-select: none; position: relative; padding-right: 40px; }
+  .ts summary::-webkit-details-marker { display: none; }
+  .ts summary::after { content: "+"; position: absolute; right: 18px; top: 12px; color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+  .ts[open] summary::after { content: "−"; }
+  .ts .body { padding: 4px 18px 18px; border-top: 1px solid var(--border); }
+  .ts .body p:first-child { margin-top: 12px; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { padding: 12px 14px; border: 1px solid var(--border); margin-bottom: 8px; background: var(--surface); display: flex; align-items: flex-start; gap: 12px; cursor: pointer; transition: all 0.15s; font-size: 14.5px; }
+  .checklist li:hover { border-color: var(--accent-dim); }
+  .checklist li.done { opacity: 0.45; text-decoration: line-through; }
+  .checklist .box { width: 14px; height: 14px; border: 1px solid var(--muted); flex-shrink: 0; margin-top: 4px; position: relative; }
+  .checklist li.done .box { background: var(--ok); border-color: var(--ok); }
+  .checklist li.done .box::after { content: "✓"; position: absolute; color: var(--bg); font-size: 12px; top: -3px; left: 1px; font-weight: bold; }
+  dl.glossary { margin: 0; }
+  dl.glossary dt { font-family: var(--mono); color: var(--accent); font-size: 13px; margin-top: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  dl.glossary dd { margin: 4px 0 0; padding-left: 0; }
+  footer { border-top: 1px solid var(--border); margin-top: 80px; padding-top: 22px; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; }
+  ::selection { background: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <a class="toc-back" href="manuals_index.html">&larr; Manual index</a>
+  <div class="toc-title">Field Manual</div>
+  <input type="text" id="search" class="search-box" placeholder="Search the manual..." />
+  <ol class="toc">
+    <li><a href="#overview">The goal in one paragraph</a></li>
+    <li><a href="#concepts">PBR in one screen</a></li>
+    <li><a href="#pipeline">The full pipeline</a></li>
+    <li><a href="#stagemap">Building the stage map in TD</a></li>
+    <li><a href="#materials">PBR materials &amp; texture sources</a></li>
+    <li><a href="#lighting">Virtual moving lights in TD</a></li>
+    <li><a href="#composite">Compositing in Resolume</a></li>
+    <li><a href="#highlight">Making lights highlight the PBR</a></li>
+    <li><a href="#performance">Performance budget</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Pre-show checklist</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <div class="kicker">Stage Technician's Field Manual · Volume III</div>
+  <h1>PBR Stage Map &amp; Moving-Light Overlay</h1>
+  <p class="lede">Resolume is rendering your base visuals onto the stage. TouchDesigner is rendering a PBR-shaded version of the same stage geometry, lit by virtual moving lights, and sending it over NDI as an overlay layer. The result: physical lighting that looks like it's responding to material properties on a real-looking surface — but it's all projection.</p>
+</header>
+
+<section id="overview">
+  <span class="num">Section 01</span>
+  <h2>The goal in one paragraph</h2>
+  <p class="section-sub">Read this once, picture it in your head, then move on.</p>
+
+  <p>You've got a physical stage surface (flats, a sculpture, a backdrop, whatever you've built). You've got Resolume mapping content onto it via Advanced Output. Now you want to make it look like that surface is a textured, photoreal object — concrete, metal, fabric, brushed steel, whatever — being lit by moving lights that sweep across it. The textures and the lighting are not real. They're a PBR scene rendered in TouchDesigner with the same geometry as your physical stage, projected back on top of the surface so the eye reads it as material reality.</p>
+
+  <p>The base composition in Resolume keeps doing its thing — clip launching, beat-synced effects, the show content. The PBR layer is a top-layer overlay piped in over NDI that adds material and lighting realism. Done right, the audience can't tell where the projection ends and the lighting design begins. That's the magic of the technique.</p>
+</section>
+
+<section id="concepts">
+  <span class="num">Section 02</span>
+  <h2>PBR in one screen</h2>
+  <p class="section-sub">Just enough theory to get the texture maps right.</p>
+
+  <p>Physically Based Rendering is a way of describing surfaces using a handful of texture maps that drive a standardised shader. A PBR material is typically four maps:</p>
+
+  <table>
+    <thead><tr><th>Map</th><th>Tells the renderer</th><th>Typical range</th></tr></thead>
+    <tbody>
+      <tr><td>Albedo (base colour)</td><td>What colour the surface is, without any lighting</td><td>0.0 – 1.0 per RGB channel</td></tr>
+      <tr><td>Normal</td><td>Which way the surface is facing at each pixel (fake bumps without geometry)</td><td>RGB vector, tangent space</td></tr>
+      <tr><td>Roughness</td><td>How matte vs. glossy the surface is</td><td>0 (mirror) to 1 (chalk)</td></tr>
+      <tr><td>Metallic</td><td>Whether it's a metal or a non-metal</td><td>0 (dielectric) or 1 (metal)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Optional but common: <strong>AO</strong> (ambient occlusion — pre-baked shadows in crevices), <strong>height/displacement</strong> (real geometric offsets), and <strong>emissive</strong> (parts of the surface that glow on their own).</p>
+
+  <p>You can grab free PBR texture sets from places like Poly Haven, ambientCG, or AmbientCG (formerly CC0 Textures). 2K resolution is plenty for projected use — most projectors can't resolve more than that anyway. Pick a few textures that fit the show's vibe and have them on disk before you leave the studio.</p>
+
+  <div class="callout info">
+    <span class="label">Why PBR matters for projection</span>
+    <p>A flat texture mapped onto a flat slice looks like a picture. A PBR-shaded texture with proper normal/roughness response to a moving light looks like an object. The brain interprets the moving specular highlights as evidence that the surface is real and physical, even when it's a flat projection screen. That illusion is the whole point.</p>
+  </div>
+</section>
+
+<section id="pipeline">
+  <span class="num">Section 03</span>
+  <h2>The full pipeline</h2>
+  <p class="section-sub">Every step from texture file to projected pixel.</p>
+
+  <div class="diagram">
+    <div class="caption">Signal flow — PBR overlay path</div>
+<pre>
+   [PBR texture files on disk: albedo, normal, roughness, metallic]
+                              │
+                              ↓
+   ┌─────────────────────────────────────────────────────────┐
+   │ TouchDesigner (Mac)                                     │
+   │                                                          │
+   │   Stage geometry (SOP)                                   │
+   │        │                                                 │
+   │        ↓                                                 │
+   │   PBR MAT (textures wired in)                            │
+   │        │                                                 │
+   │        ↓                                                 │
+   │   Geometry COMP with Light COMPs (virtual movers)        │
+   │        │                                                 │
+   │        ↓                                                 │
+   │   Render TOP (camera matches projector position)         │
+   │        │                                                 │
+   │        ↓                                                 │
+   │   Touch Out TOP (NDI sender, named "TD_PBR")             │
+   └─────────────────────────────────────────────────────────┘
+                              │
+                              │ NDI over Ethernet
+                              ↓
+   ┌─────────────────────────────────────────────────────────┐
+   │ Resolume Arena (Windows)                                │
+   │                                                          │
+   │   Layer A: base composition (your show content)          │
+   │   Layer B: NDI clip "TD_PBR" — blend mode Add or Screen  │
+   │   Advanced Output: maps both layers onto stage           │
+   └─────────────────────────────────────────────────────────┘
+                              │
+                              │ HDMI
+                              ↓
+                       [Projector → physical stage]
+</pre>
+  </div>
+
+  <p>Net effect: the projector throws your show content with a PBR-shaded, dynamically-lit overlay on top. Where the virtual lights hit the virtual material, you get glints, specular highlights, and directional shading. The physical surface reads as a textured object instead of a projection screen.</p>
+</section>
+
+<section id="stagemap">
+  <span class="num">Section 04</span>
+  <h2>Building the stage map in TouchDesigner</h2>
+  <p class="section-sub">Modelling your physical stage as a 3D scene that matches the projector's view.</p>
+
+  <p>The trick that makes this whole technique work is <strong>camera projection mapping</strong>: TD's virtual camera is positioned in 3D space to exactly match where the projector is in physical space. When TD renders its 3D scene from that camera, the resulting 2D image lines up with the physical surfaces when projected.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Model the physical stage as basic geometry.</strong> You don't need anything photo-real — just primitives (boxes, planes, spheres) that occupy the same positions as your real surfaces. A backdrop is a flat plane; a sculpture is a sphere or a custom mesh; flats are rectangles. Use a <code>Rectangle SOP</code>, <code>Box SOP</code>, or import an OBJ. Real-world units (metres) make scale intuitive.</p>
+    </li>
+    <li>
+      <p><strong>Place a virtual camera at the projector's position.</strong> Drop a <code>Camera COMP</code>. Set its translation to match where the projector physically sits relative to the stage. Set its rotation to point at the stage. Set the field of view to match the projector's optics — most data projectors are around 25–40° vertical FOV; the spec sheet has the exact value or you can calculate it from the throw ratio.</p>
+    </li>
+    <li>
+      <p><strong>Set the camera's near/far clipping to sensible values</strong> (e.g. near 0.1 m, far 50 m). Render artifacts at extreme distances usually mean clip planes are off.</p>
+    </li>
+    <li>
+      <p><strong>Drop a <code>Render TOP</code>.</strong> Set its camera reference to your Camera COMP, set the resolution to your composition resolution (1920×1080 or whatever the projector is), and reference your scene's Geometry COMP in the geometry parameter.</p>
+    </li>
+    <li>
+      <p><strong>Wire a test grid onto the geometry.</strong> Use a <code>Grid TOP</code> as the material's texture temporarily. Render. The grid should appear on the virtual stage from the projector's POV.</p>
+    </li>
+    <li>
+      <p><strong>Calibrate by overlaying the render onto a Resolume test-pattern projection.</strong> Send the TD render as NDI to Resolume, layer it on top of a Resolume grid pattern, blend mode Difference. Wherever the two grids cancel out and you see black, your virtual camera is correctly placed. Wherever you see colour, the grids are misaligned — adjust TD camera position/rotation/FOV until the difference goes black across the whole surface.</p>
+    </li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">Getting the camera right is 80% of the work</span>
+    <p>If your TD camera doesn't match the projector, your PBR overlay will be smeared across the stage at the wrong angle and the illusion is dead. Spend time on the calibration. Once it's locked, save the .toe and don't touch the camera parameters again until the projector physically moves.</p>
+  </div>
+</section>
+
+<section id="materials">
+  <span class="num">Section 05</span>
+  <h2>PBR materials &amp; texture sources</h2>
+  <p class="section-sub">Hooking texture maps into the shader.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Drop a <code>PBR MAT</code> on your TD network.</strong> This is TouchDesigner's physically-based material operator. By default it has albedo, normal, roughness, metallic, and AO inputs as parameters.</p>
+    </li>
+    <li>
+      <p><strong>Load each texture map as a <code>MovieFileIn TOP</code> or <code>TextureIn TOP</code>.</strong> One TOP per map. Even though they're called "movie file" they happily load static images (PNG, JPG, TIFF, EXR).</p>
+    </li>
+    <li>
+      <p><strong>Drag each TOP into the matching parameter on the PBR MAT.</strong> Albedo TOP → Color Map; Normal TOP → Normal Map; Roughness TOP → Roughness Map; Metallic TOP → Metallic Map; AO TOP → Ambient Occlusion Map.</p>
+    </li>
+    <li>
+      <p><strong>Set the normal map type correctly.</strong> Most downloadable PBR sets use OpenGL convention for the normal map. In the PBR MAT, confirm the Normal Map parameter's <strong>Invert Y</strong> is set correctly — if your surface looks "inside-out" (bumps look like dents and vice versa), toggle this.</p>
+    </li>
+    <li>
+      <p><strong>Apply the PBR MAT to your Geometry COMP.</strong> Open the Geometry COMP, find the <strong>Material</strong> parameter, point it at your PBR MAT.</p>
+    </li>
+    <li>
+      <p><strong>Set tiling/scale on the textures.</strong> If your 2K texture tiles across a 4-metre flat, you want it to repeat a few times — set the UV scale in the material or pre-tile in a <code>Tile TOP</code> before feeding to the PBR MAT. Most rough surfaces (concrete, brick, fabric) read better when tiled small.</p>
+    </li>
+  </ol>
+
+  <h4>Texture sources to pre-download</h4>
+  <ul>
+    <li>Poly Haven (<code>polyhaven.com</code>) — high-quality CC0 PBR sets, easy to download as a single zipped folder.</li>
+    <li>ambientCG (<code>ambientcg.com</code>) — huge library, also CC0.</li>
+    <li>Substance Source — paid but very high quality if you have a subscription.</li>
+  </ul>
+  <p>Download a handful before the show. Concrete, brushed metal, weathered wood, fabric, marble are all reliable choices that look great with directional lighting. Avoid anything too low-roughness (highly mirrored) unless you really know what you're doing — mirror surfaces show every flaw in your camera calibration.</p>
+
+  <div class="callout info">
+    <span class="label">Resolution rule of thumb</span>
+    <p>Texture resolution should be at least 2x your projector's resolution on the surface in question. If a surface fills 1000 pixels of projector output, use a 2K texture on it. 4K textures look slightly nicer at the cost of VRAM and load time — diminishing returns past 2K for stage use.</p>
+  </div>
+</section>
+
+<section id="lighting">
+  <span class="num">Section 06</span>
+  <h2>Virtual moving lights in TouchDesigner</h2>
+  <p class="section-sub">Adding the directional light that brings PBR materials alive.</p>
+
+  <p>PBR materials look flat under flat lighting. The whole technique depends on a moving directional light source that creates shifting specular highlights and shadows on the virtual geometry. In TD, this means adding <code>Light COMP</code>s and animating them.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Drop one or more <code>Light COMP</code>s.</strong> Pick the type that matches what you want: <strong>Point</strong> for an omnidirectional bulb, <strong>Cone</strong> for a spotlight (most useful for "moving head" simulation), <strong>Directional</strong> for parallel rays like sunlight.</p>
+    </li>
+    <li>
+      <p><strong>Wire each Light COMP into your Geometry COMP's Lights parameter.</strong> Multiple lights are space-separated. Up to 8 simultaneous lights work well; more starts to slow the renderer.</p>
+    </li>
+    <li>
+      <p><strong>Set the light's colour and intensity.</strong> Realistic stage-light values: white-ish colour, intensity 1.0–5.0 depending on the surface's albedo. A pure white directional light at intensity 2.0 on a concrete texture gives you obvious diffuse and specular response.</p>
+    </li>
+    <li>
+      <p><strong>Animate the light's position or rotation.</strong> The simplest way: a <code>LFO CHOP</code> driving the light's translate or rotate channels. A sine wave on rotate-Y at 0.1 Hz gives a slow sweep across the stage. For moving-head simulation: animate position around the stage and aim using a Look At constraint.</p>
+    </li>
+    <li>
+      <p><strong>For multi-light sweeps with relationships, use a <code>Replicator COMP</code>.</strong> One template light, replicated N times with offset animation phases, gives you a coordinated lighting rig. Drive each replicate's parameters from an indexed Table DAT for full control.</p>
+    </li>
+    <li>
+      <p><strong>Enable shadows if you can afford the GPU cost.</strong> On the Light COMP, set the Shadow Type to Soft. Realistic shadows from your virtual lights falling across your virtual geometry sell the illusion hard. Skip this if framerate drops below 30 fps.</p>
+    </li>
+  </ol>
+
+  <h4>Sound-reactive lights</h4>
+  <p>To make the virtual lights respond to music: route audio analysis from Resolume back to TD via OSC, or analyse audio directly in TD with an <code>Audio Device In CHOP → Audio Spectrum CHOP</code>. Drive light intensity from a frequency band — kick on the low band, hat on the high — and the PBR overlay pulses with the track. This is where the technique becomes hypnotic to watch.</p>
+
+  <div class="callout">
+    <span class="label">Less is more</span>
+    <p>One or two well-animated lights with clear directional intent reads better than eight chaotic ones. The audience needs to <em>feel</em> the light direction for the PBR illusion to work. Start with one slow-moving cone light, then add complexity only if the look needs it.</p>
+  </div>
+</section>
+
+<section id="composite">
+  <span class="num">Section 07</span>
+  <h2>Compositing the PBR layer in Resolume</h2>
+  <p class="section-sub">Stacking the NDI overlay above your base content with the right blend mode.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Confirm TD's PBR render is reaching Resolume over NDI.</strong> See the NDI manual. The stream named <code>TD_PBR</code> (or whatever you named your Touch Out TOP) should appear in Resolume's Sources panel under NDI.</p>
+    </li>
+    <li>
+      <p><strong>Create a dedicated layer for the PBR overlay.</strong> Right-click in the layer column area, add a new layer above your existing content layers. Call it "PBR Overlay" so it's obvious what it is.</p>
+    </li>
+    <li>
+      <p><strong>Drag the NDI source onto a clip slot on that layer.</strong> Trigger the clip so it's live. You should see the TD PBR render appearing on the master output, sitting on top of your base content.</p>
+    </li>
+    <li>
+      <p><strong>Set the layer's blend mode.</strong> Three good choices depending on what you want:</p>
+      <ul>
+        <li><strong>Add</strong> — brightens wherever PBR has light. Best for "lights are physically illuminating" effect. Black areas of PBR don't darken the base.</li>
+        <li><strong>Screen</strong> — softer version of Add. Less likely to clip to white.</li>
+        <li><strong>Overlay</strong> — multiplies dark, screens light. Good for emphasising material texture without flattening base content.</li>
+      </ul>
+    </li>
+    <li>
+      <p><strong>Dial the layer opacity.</strong> Start at 50%. Adjust until the PBR feels present but doesn't overwhelm the base content. Often you want the PBR slightly subliminal — the audience should feel it more than see it as a distinct layer.</p>
+    </li>
+    <li>
+      <p><strong>Verify alignment.</strong> Open Advanced Output. The PBR layer is mapped onto the same slices as the base content (it has the same composition resolution from TD). If the PBR is offset or warped relative to the base, your TD camera doesn't match the projector — go back to Section 04 and recalibrate.</p>
+    </li>
+  </ol>
+
+  <div class="callout info">
+    <span class="label">Black background in TD</span>
+    <p>For Add and Screen blend modes to work cleanly, the parts of the TD render where there's no light hitting the geometry need to be black. Make sure your scene's environment colour is 0,0,0 and your ambient light intensity is 0. Otherwise you'll have a grey-ish wash polluting Resolume's base content.</p>
+  </div>
+</section>
+
+<section id="highlight">
+  <span class="num">Section 08</span>
+  <h2>Making moving lights highlight the PBR</h2>
+  <p class="section-sub">Synchronising physical par cans / moving heads with the virtual lighting so the eye reads them as one.</p>
+
+  <p>The final twist: your physical DMX fixtures (par cans flanking the stage, or moving heads above) should reinforce the virtual lighting. If the TD render shows a virtual cone light sweeping left-to-right across a brushed-metal flat, the physical pars should sweep their colour from cold-white to warm-amber in sync. The audience can't separate "the projection brightened" from "the real lights changed" — both happen together and they fuse into one coherent lighting cue.</p>
+
+  <h4>Approach A — Resolume Lumiverse pickup on the PBR layer</h4>
+  <p>The simplest path. Lumiverse samples colour from anywhere on your composition. If you place a pickup point over the part of the composition where the PBR render is showing strong specular highlights, the par car will pick up that colour automatically.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>Open Lumiverse in Resolume.</strong> <code>Output → Lumiverse</code> or the Lumiverse tab if you've docked it.</p>
+    </li>
+    <li>
+      <p><strong>Add virtual fixtures for each physical par.</strong> Drag the fixture profile (RGB) onto the Lumiverse canvas. Place each one near the part of the composition you want it sampling.</p>
+    </li>
+    <li>
+      <p><strong>For PBR highlighting, place pickups on the brightest area of the PBR render.</strong> For example, if a cone light in TD is sweeping a metallic flat, put the pickup right on the specular highlight's path. The par will track that highlight's colour as it moves.</p>
+    </li>
+    <li>
+      <p><strong>Size the pickup region.</strong> Smaller = more colour-precise, more flickery. Bigger = smoother, more averaged. Start with about 5% of the composition's height as the pickup diameter.</p>
+    </li>
+  </ol>
+
+  <h4>Approach B — OSC from TD driving DMX directly</h4>
+  <p>For tighter sync between virtual and physical lighting, bypass colour-sampling and drive the DMX from the same TD parameters that drive the virtual lights.</p>
+
+  <ol class="steps">
+    <li>
+      <p><strong>In TouchDesigner, take the channels driving your Light COMPs</strong> (translate, rotate, intensity, colour) and route them through a <code>CHOP Execute DAT</code> or <code>OSC Out CHOP</code> that sends OSC messages to Resolume.</p>
+    </li>
+    <li>
+      <p><strong>In Resolume, enable OSC input.</strong> <code>Preferences → OSC → Listen on port 7000</code>. Map incoming OSC addresses to Lumiverse fixture parameters by right-clicking a fixture's colour/intensity slider and selecting "Edit OSC" or shortcut <code>Ctrl+M</code> then sending the OSC message.</p>
+    </li>
+    <li>
+      <p><strong>Now TD is the single source of truth.</strong> Virtual light sweeps left, physical par fades left-to-right amber-to-cold, in the same animation loop. Both driven by the same TD CHOP. Tight sync, no drift.</p>
+    </li>
+  </ol>
+
+  <h4>Approach C — TouchDesigner sends Art-Net directly</h4>
+  <p>If you want TD to talk to your DMX node directly without Resolume in the loop, drop a <code>DMX Out CHOP</code> and configure it for Art-Net. Set the IP to the Art-Net node, pick the universe number, route channel data in. This bypasses Lumiverse entirely. Works well if you want TD-driven fixtures and Resolume-driven fixtures on different universes.</p>
+
+  <div class="callout warn">
+    <span class="label">Pick one DMX driver</span>
+    <p>Don't have both Resolume and TouchDesigner sending Art-Net to the same universe — they'll fight and you'll get random-looking flickering. Either Resolume drives all the fixtures (Approach A or B) or TD drives them (Approach C). Mixing means assigning different universes to each tool's fixtures.</p>
+  </div>
+</section>
+
+<section id="performance">
+  <span class="num">Section 09</span>
+  <h2>Performance budget</h2>
+  <p class="section-sub">What this technique costs and where to look when it's too expensive.</p>
+
+  <h4>TouchDesigner cost</h4>
+  <ul>
+    <li>One Geometry COMP with PBR material and 2 lights and shadows on: ~20–30% GPU on a mid-range Mac at 1080p60.</li>
+    <li>Same scene with 6 lights and soft shadows: 40–50%.</li>
+    <li>4K render instead of 1080p: roughly 3–4x the GPU cost. Stay at 1080p unless you have a strong reason.</li>
+  </ul>
+
+  <h4>NDI cost</h4>
+  <ul>
+    <li>1080p60 NDI: ~125 Mbit/sec, ~15% CPU on encode and decode each. Gigabit Ethernet handles this with room to spare.</li>
+    <li>Two simultaneous PBR streams from TD (say, two different materials on two layers): doubles bandwidth and CPU. Still fits on gigabit.</li>
+  </ul>
+
+  <h4>Resolume cost</h4>
+  <ul>
+    <li>Receiving an NDI source as a layer: trivial — much less than playing an HD video clip from disk.</li>
+    <li>Blend mode Add/Screen/Overlay: trivial GPU cost.</li>
+    <li>The composite cost is dominated by the rest of your show content, not by the PBR layer.</li>
+  </ul>
+
+  <h4>Where to cut if performance dies</h4>
+  <ol>
+    <li>Disable shadows on Light COMPs first. Saves the most GPU on TD.</li>
+    <li>Reduce render resolution from 1080p to 720p — viewers won't notice on a soft-focus projected surface.</li>
+    <li>Reduce number of active lights. One sweeping light is plenty.</li>
+    <li>Bake high-quality stills if the show only has a few PBR moments — render to disk in advance, play back as a video clip instead of live rendering.</li>
+  </ol>
+
+  <div class="callout">
+    <span class="label">Baked fallback</span>
+    <p>For show-critical moments, render the PBR animation to a video file at home and load it as a regular Resolume clip. Live TD-over-NDI is great when it works; a 30-second pre-baked MP4 of the same animation is bulletproof. Have the baked clip on a backup layer ready to fade in if NDI drops.</p>
+  </div>
+</section>
+
+<section id="troubleshoot">
+  <span class="num">Section 10</span>
+  <h2>Troubleshooting</h2>
+  <p class="section-sub">The most common failure modes.</p>
+
+  <details class="ts">
+    <summary>PBR overlay is offset from the base composition</summary>
+    <div class="body">
+      <p>TD's camera doesn't match the projector. Go back to Section 04 step 6 and recalibrate using the difference-blend grid test. Common micro-causes: projector got bumped between calibration and show; lens zoom was adjusted; the comp resolution and TD render resolution don't match.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Specular highlights look like white smears with no shape</summary>
+    <div class="body">
+      <p>Roughness map is missing or set too high. Drop the roughness uniform value to 0.3–0.5 and see if highlights tighten up. Also check that the normal map is wired correctly — without a normal map, every pixel has the same orientation and you get flat reflections.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Whole PBR layer looks grey/washed out</summary>
+    <div class="body">
+      <p>Ambient light intensity in TD is too high, or environment colour isn't black. With Add blend mode in Resolume, grey TD pixels become grey wash on the composition. Set environment colour to (0,0,0) and ambient intensity to 0 so only the lit areas have any pixel value.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>Virtual lights animate, but physical pars don't follow</summary>
+    <div class="body">
+      <p>Approach A (Lumiverse pickup): the pickup region isn't over the moving highlight. Drag it. Approach B (OSC): check Resolume is receiving OSC — its OSC monitor shows incoming messages. Approach C (TD Art-Net): confirm DMX Out CHOP is enabled, the node IP is reachable, and the universe matches the fixture's DMX address.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>TD framerate drops below 30 fps</summary>
+    <div class="body">
+      <p>Disable shadows first (biggest win on most rigs). Then reduce active light count. Then drop render resolution. Last resort: bake the PBR animation as a video and stop rendering it live.</p>
+    </div>
+  </details>
+
+  <details class="ts">
+    <summary>NDI stream from TD goes black during the show</summary>
+    <div class="body">
+      <p>The Touch Out TOP's input went undefined — usually because a render TOP errored out (missing texture file, invalid camera reference, broken material). Check TD's textport for red error messages. The bake-to-video fallback exists for exactly this scenario; switch to it and debug TD after the show.</p>
+    </div>
+  </details>
+</section>
+
+<section id="checklist">
+  <span class="num">Section 11</span>
+  <h2>Pre-show checklist</h2>
+  <p class="section-sub">Tick before doors.</p>
+
+  <ul class="checklist">
+    <li><div class="box"></div><div>PBR texture sets pre-downloaded; .toe file references local paths, not cloud paths.</div></li>
+    <li><div class="box"></div><div>TD project loads without missing-file warnings.</div></li>
+    <li><div class="box"></div><div>Virtual camera calibrated; grid difference-test goes to black.</div></li>
+    <li><div class="box"></div><div>PBR materials wired; albedo/normal/roughness/metallic all present.</div></li>
+    <li><div class="box"></div><div>At least one Light COMP animating; intensity reads on the rendered scene.</div></li>
+    <li><div class="box"></div><div>Touch Out TOP set to NDI, named clearly.</div></li>
+    <li><div class="box"></div><div>Resolume sees the NDI source; clip triggers and plays on the PBR layer.</div></li>
+    <li><div class="box"></div><div>PBR layer blend mode and opacity dialled in; overlay reads as material on the projected surface.</div></li>
+    <li><div class="box"></div><div>Lumiverse pickups (or OSC mapping, or TD Art-Net) wired to physical pars; they respond to virtual lighting.</div></li>
+    <li><div class="box"></div><div>Baked fallback clip on a hidden Resolume layer in case TD drops.</div></li>
+    <li><div class="box"></div><div>TD framerate above 30 fps with the full scene running.</div></li>
+    <li><div class="box"></div><div>.toe file backed up to a second drive.</div></li>
+  </ul>
+</section>
+
+<section id="glossary">
+  <span class="num">Section 12</span>
+  <h2>Glossary</h2>
+
+  <dl class="glossary">
+    <dt>Albedo</dt>
+    <dd>The base colour of a surface, without any lighting information baked in. The "what colour is this surface" map in PBR.</dd>
+
+    <dt>Camera projection mapping</dt>
+    <dd>The technique of positioning a virtual camera to match a real-world projector, so the rendered image lines up with physical surfaces when projected.</dd>
+
+    <dt>CHOP</dt>
+    <dd>Channel Operator. TouchDesigner's family of operators that handle numeric channel data — animation curves, audio analysis, MIDI, OSC, DMX.</dd>
+
+    <dt>MAT</dt>
+    <dd>Material Operator. TouchDesigner's family of operators that define how surfaces respond to light. PBR MAT is the physically-based one.</dd>
+
+    <dt>Metallic</dt>
+    <dd>A PBR map that says whether a surface is a metal (1) or a non-metal/dielectric (0). Affects how reflections and tints work.</dd>
+
+    <dt>Normal map</dt>
+    <dd>An RGB image where each pixel encodes a surface direction vector. Fakes bumps and detail on flat geometry without adding polygons.</dd>
+
+    <dt>PBR</dt>
+    <dd>Physically Based Rendering. A standardised material model using albedo, normal, roughness, and metallic maps.</dd>
+
+    <dt>Render TOP</dt>
+    <dd>TouchDesigner operator that takes a 3D scene and renders it from a camera's POV into a 2D texture.</dd>
+
+    <dt>Roughness</dt>
+    <dd>A PBR map describing how matte (1.0) or glossy (0.0) a surface is at each point. The single most expressive PBR map for stage use.</dd>
+
+    <dt>SOP</dt>
+    <dd>Surface Operator. TouchDesigner's family of operators for 3D geometry — primitives, imports, transforms.</dd>
+
+    <dt>Specular highlight</dt>
+    <dd>The bright glint a surface shows when a light source reflects directly toward the camera. Strongest on low-roughness materials.</dd>
+  </dl>
+</section>
+
+<footer>
+  END OF FIELD MANUAL · OFFLINE-SAFE · SINGLE FILE · NO EXTERNAL DEPENDENCIES
+</footer>
+
+</main>
+</div>
+
+<script>
+  document.querySelectorAll('.checklist li').forEach(function(li) {
+    li.addEventListener('click', function() { li.classList.toggle('done'); });
+  });
+
+  var search = document.getElementById('search');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main section'));
+  var originalClones = new Map();
+  sections.forEach(function(s) { originalClones.set(s, s.cloneNode(true)); });
+
+  function restoreSection(s) {
+    var clone = originalClones.get(s).cloneNode(true);
+    s.replaceWith(clone);
+    var idx = sections.indexOf(s);
+    if (idx !== -1) sections[idx] = clone;
+    return clone;
+  }
+
+  function highlightInNode(node, q) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(n) {
+        if (!n.parentNode) return NodeFilter.FILTER_REJECT;
+        var tag = n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var toReplace = [];
+    while (walker.nextNode()) {
+      var n = walker.currentNode;
+      if (n.nodeValue.toLowerCase().indexOf(q) !== -1) toReplace.push(n);
+    }
+    toReplace.forEach(function(n) {
+      var src = n.nodeValue;
+      var lower = src.toLowerCase();
+      var frag = document.createDocumentFragment();
+      var i = 0;
+      while (i < src.length) {
+        var hit = lower.indexOf(q, i);
+        if (hit === -1) {
+          frag.appendChild(document.createTextNode(src.slice(i)));
+          break;
+        }
+        if (hit > i) frag.appendChild(document.createTextNode(src.slice(i, hit)));
+        var span = document.createElement('span');
+        span.className = 'search-hit';
+        span.textContent = src.slice(hit, hit + q.length);
+        frag.appendChild(span);
+        i = hit + q.length;
+      }
+      n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  search.addEventListener('input', function() {
+    var q = search.value.trim().toLowerCase();
+    sections.slice().forEach(function(s) {
+      var fresh = restoreSection(s);
+      if (!q) { fresh.style.display = ''; return; }
+      var text = fresh.textContent.toLowerCase();
+      if (text.indexOf(q) === -1) { fresh.style.display = 'none'; }
+      else { fresh.style.display = ''; highlightInNode(fresh, q); }
+    });
+    document.querySelectorAll('.checklist li').forEach(function(li) {
+      li.addEventListener('click', function() { li.classList.toggle('done'); });
+    });
+  });
+</script>
+
+</body>
+</html>
